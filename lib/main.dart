@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,7 +37,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final String apiKey = "a194493e5fd94fff814c7eebf34e2f65";
   late NewsAPI newsAPI;
-
   int _bottomNavigationBarIndex = 0;
   List<Article> newsData = [];
 
@@ -47,13 +48,24 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _getTopHeadLines(NewsAPI newsAPI) async {
     try {
-      List<Article> fetchedNewsData = await newsAPI.getTopHeadlines(
-          country: "us", category: "science");
+      List<Article> fetchedNewsData =
+          await newsAPI.getTopHeadlines(country: "us", category: "sports");
       setState(() {
-        newsData = fetchedNewsData.where((article) => article.title != "[Removed]").toList();
+        newsData = fetchedNewsData
+            .map((article) => Article(
+                article.source,
+                article.author ?? 'Unknown Author',
+                article.title ?? 'No Title',
+                article.description ?? 'No Description',
+                article.url ?? 'No URL',
+                article.urlToImage ??
+                    'https://i0.wp.com/poolpromag.com/wp-content/uploads/2020/02/News-Placeholder.jpg',
+                article.publishedAt ?? 'Unknown Date',
+                article.content ?? 'No Content'))
+            .where((article) => article.title != '[Removed]')
+            .toList();
       });
-    }
-    catch (e) {
+    } catch (e) {
       print("Error $e");
     }
   }
@@ -69,8 +81,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Echo News'),
-        backgroundColor: Colors.red,
+        title: Text('Echo News',
+            style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.w800)),
+        flexibleSpace: const FlexibleSpaceBar(
+          background: DecoratedBox(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      colors: [Colors.red, Colors.orange],
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft))),
+        ),
         centerTitle: true,
         leading: IconButton(
             onPressed: () => {}, icon: const Icon(Icons.person_2_sharp)),
@@ -88,9 +108,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 itemCount: newsData.length,
                 itemBuilder: (BuildContext context, int index) {
                   final Article item = newsData[index];
-                  return NewsCard(title: item.title ?? 'No Title',
-                      content: item.content ?? 'No Content',
-                      imageURL: item.urlToImage ?? 'No URL');
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => NewsPage(article: item)));
+                    },
+                    child: NewsCard(article: item),
+                  );
                 },
               ),
             ],
@@ -107,7 +133,7 @@ class _MyHomePageState extends State<MyHomePage> {
               icon: Icon(Icons.bookmark), label: 'Bookmarks')
         ],
         selectedItemColor: Colors.red,
-        unselectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
         currentIndex: _bottomNavigationBarIndex,
         onTap: _onSelected,
         showUnselectedLabels: true,
@@ -117,31 +143,122 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class NewsCard extends StatelessWidget {
-  final String title;
-  final String content;
-  final String imageURL;
+  final Article article;
 
-  const NewsCard({
-    super.key,
-    required this.title,
-    required this.content,
-    required this.imageURL,
-  });
+  const NewsCard({super.key, required this.article});
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 5,
       margin: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.network(imageURL, width:400, height:200, errorBuilder: (context, object, stackTrace) {
-            return Container(color: Colors.grey, width: 400, height: 200, child: const Center(child: Text("No Image")));
-          }),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20.0),
+            child: Image.network(article.urlToImage!, fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+              return const Image(
+                  image: AssetImage('assets/images/news-placeholder.jpg'),
+                  fit: BoxFit.cover);
+            }),
+          ),
           Padding(
               padding: const EdgeInsets.all(10),
-              child: Text(title))
+              child: Text(article.title!,
+                  style: GoogleFonts.roboto(
+                      fontSize: 16, fontWeight: FontWeight.w400))),
         ],
+      ),
+    );
+  }
+}
+
+class NewsPage extends StatelessWidget {
+  final Article article;
+
+  const NewsPage({super.key, required this.article});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(article.title!,
+            style:
+                GoogleFonts.roboto(fontSize: 20, fontWeight: FontWeight.w400)),
+        actions: [
+          IconButton(
+              onPressed: () {},
+              iconSize: 32,
+              icon: const Icon(Icons.bookmark),
+              color: Colors.grey.shade400)
+        ],
+        backgroundColor: Colors.red,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.network(article.urlToImage!, fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                return const Image(
+                    image: AssetImage('assets/images/news-placeholder.jpg'),
+                    fit: BoxFit.cover);
+              }),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Text(
+              article.title!,
+              style:
+                  GoogleFonts.roboto(fontSize: 20, fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Text(article.content!,
+                style: GoogleFonts.roboto(
+                    fontSize: 18, fontWeight: FontWeight.w400)),
+            const SizedBox(
+              height: 10,
+            ),
+            Row(
+              children: [
+                Text(article.author!,
+                    style: GoogleFonts.roboto(
+                        fontStyle: FontStyle.italic,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400)),
+                const Spacer(),
+                Text(
+                    DateFormat('MMMM dd, yyyy h:mm a')
+                        .format(DateTime.parse(article.publishedAt!))
+                        .toString(),
+                    style: GoogleFonts.roboto(
+                        fontStyle: FontStyle.italic,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400))
+              ],
+            ),
+            Row(
+              children: [
+                const Spacer(),
+                IconButton(
+                  onPressed: () {},
+                  iconSize: 32,
+                  icon: const Icon(Icons.share),
+                  color: Colors.blue,
+                ),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
