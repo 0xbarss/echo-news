@@ -99,12 +99,11 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            Flexible(
+              fit: FlexFit.loose,
+              child: ListView.builder(
                 itemCount: newsData.length,
                 itemBuilder: (BuildContext context, int index) {
                   final Article item = newsData[index];
@@ -119,8 +118,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
