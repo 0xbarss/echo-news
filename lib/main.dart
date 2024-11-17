@@ -3,6 +3,8 @@ import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 void main() {
   runApp(const MyApp());
@@ -102,7 +104,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           children: [
             Flexible(
-              fit: FlexFit.loose,
               child: ListView.builder(
                 itemCount: newsData.length,
                 itemBuilder: (BuildContext context, int index) {
@@ -180,6 +181,14 @@ class NewsPage extends StatelessWidget {
 
   const NewsPage({super.key, required this.article});
 
+  Future<void> _shareLink(BuildContext context) async {
+    final box = context.findRenderObject() as RenderBox?;
+
+    await Share.share(article.url!,
+        subject: article.title!,
+        sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -221,39 +230,50 @@ class NewsPage extends StatelessWidget {
             const SizedBox(
               height: 20,
             ),
-            Text(article.content!,
-                style: GoogleFonts.roboto(
-                    fontSize: 18, fontWeight: FontWeight.w400)),
+            InkWell(
+              onTap: () async => await launchUrl(Uri.parse(article.url!)),
+              child: Text(
+                  article.content!
+                      .replaceAll(RegExp(r"\s\[\+\d+\s+chars\]"), ""),
+                  style: GoogleFonts.roboto(
+                      fontSize: 18, fontWeight: FontWeight.w400)),
+            ),
             const SizedBox(
               height: 10,
             ),
             Row(
               children: [
-                Text(article.author!,
-                    style: GoogleFonts.roboto(
-                        fontStyle: FontStyle.italic,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400)),
+                Expanded(
+                  child: Text(article.author!,
+                      style: GoogleFonts.roboto(
+                          fontStyle: FontStyle.italic,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400)),
+                ),
                 const Spacer(),
-                Text(
-                    DateFormat('MMMM dd, yyyy h:mm a')
-                        .format(DateTime.parse(article.publishedAt!))
-                        .toString(),
-                    style: GoogleFonts.roboto(
-                        fontStyle: FontStyle.italic,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400))
+                Expanded(
+                  child: Text(
+                      DateFormat('MMMM dd, yyyy h:mm a')
+                          .format(DateTime.parse(article.publishedAt!))
+                          .toString(),
+                      style: GoogleFonts.roboto(
+                          fontStyle: FontStyle.italic,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400)),
+                )
               ],
             ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                const Spacer(),
-                IconButton(
-                  onPressed: () {},
-                  iconSize: 32,
-                  icon: const Icon(Icons.share),
-                  color: Colors.blue,
-                ),
+                Builder(builder: (context) {
+                  return IconButton(
+                    iconSize: 32,
+                    icon: const Icon(Icons.share),
+                    color: Colors.blue,
+                    onPressed: () => _shareLink(context),
+                  );
+                }),
               ],
             )
           ],

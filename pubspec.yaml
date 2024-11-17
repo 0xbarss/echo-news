@@ -38,6 +38,8 @@ dependencies:
   news_api_flutter_package: ^1.2.0
   google_fonts: ^6.2.1
   intl: ^0.19.0
+  url_launcher: ^6.3.1
+  share_plus: ^10.1.2
 
 dev_dependencies:
   flutter_test:
