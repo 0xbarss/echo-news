@@ -1,3 +1,4 @@
+import 'package:echo_news/categories.dart';
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
@@ -37,19 +38,20 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final String apiKey = "a194493e5fd94fff814c7eebf34e2f65";
   late NewsAPI newsAPI;
-  int _bottomNavigationBarIndex = 0;
   List<Article> newsData = [];
+  int _bottomNavigationBarIndex = 0;
 
   void _onSelected(index) {
     setState(() {
       _bottomNavigationBarIndex = index;
     });
+
   }
 
-  Future<void> _getTopHeadLines(NewsAPI newsAPI) async {
+  Future<void> _getNewsWithCategory(NewsAPI newsAPI, {String category="general"}) async {
     try {
       List<Article> fetchedNewsData =
-          await newsAPI.getTopHeadlines(country: "us", category: "general");
+          await newsAPI.getTopHeadlines(country: "us", category: category);
       setState(() {
         newsData = fetchedNewsData
             .map((article) => Article(
@@ -74,11 +76,12 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     NewsAPI newsAPI = NewsAPI(apiKey: apiKey);
-    _getTopHeadLines(newsAPI);
+    _getNewsWithCategory(newsAPI);
   }
 
   @override
   Widget build(BuildContext context) {
+    final pages = [HomePage(newsData: newsData), CategoriesPage()];
     return Scaffold(
       appBar: AppBar(
         title: Text('Echo News',
@@ -98,29 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
           IconButton(onPressed: () => {}, icon: const Icon(Icons.settings))
         ],
       ),
-      body: Center(
-        child: Column(
-          children: [
-            Flexible(
-              child: ListView.builder(
-                itemCount: newsData.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final Article item = newsData[index];
-                  return InkWell(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => NewsPage(article: item)));
-                    },
-                    child: NewsCard(article: item),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+      body: pages[_bottomNavigationBarIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -135,6 +116,42 @@ class _MyHomePageState extends State<MyHomePage> {
         currentIndex: _bottomNavigationBarIndex,
         onTap: _onSelected,
         showUnselectedLabels: true,
+      ),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({
+    super.key,
+    required this.newsData,
+  });
+
+  final List<Article> newsData;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        children: [
+          Flexible(
+            child: ListView.builder(
+              itemCount: newsData.length,
+              itemBuilder: (BuildContext context, int index) {
+                final Article item = newsData[index];
+                return InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => NewsPage(article: item)));
+                  },
+                  child: NewsCard(article: item),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
