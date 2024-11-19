@@ -1,9 +1,10 @@
-import 'package:echo_news/categories.dart';
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'home.dart';
 import 'news_page.dart';
+import 'categories.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,8 +37,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final String apiKey = "a194493e5fd94fff814c7eebf34e2f65";
-  late NewsAPI newsAPI;
+  final NewsAPI newsAPI = NewsAPI(apiKey: "a194493e5fd94fff814c7eebf34e2f65");
   List<Article> newsData = [];
   int _bottomNavigationBarIndex = 0;
 
@@ -46,42 +46,34 @@ class _MyHomePageState extends State<MyHomePage> {
       _bottomNavigationBarIndex = index;
     });
 
+    if (_bottomNavigationBarIndex == 2) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => CategoriesPage(newsAPI: newsAPI, onCategorySelected: (List<Article> selectedNewsData) {
+                setState(() {
+                  newsData = selectedNewsData;
+                  _bottomNavigationBarIndex = 0;
+                });
+              },)));
+    }
   }
 
-  Future<void> _getNewsWithCategory(NewsAPI newsAPI, {String category="general"}) async {
-    try {
-      List<Article> fetchedNewsData =
-          await newsAPI.getTopHeadlines(country: "us", category: category);
-      setState(() {
-        newsData = fetchedNewsData
-            .map((article) => Article(
-                article.source,
-                article.author ?? 'Unknown Author',
-                article.title ?? 'No Title',
-                article.description ?? 'No Description',
-                article.url ?? 'No URL',
-                article.urlToImage ??
-                    'https://i0.wp.com/poolpromag.com/wp-content/uploads/2020/02/News-Placeholder.jpg',
-                article.publishedAt ?? 'Unknown Date',
-                article.content ?? 'No Content'))
-            .where((article) => article.title != '[Removed]')
-            .toList();
-      });
-    } catch (e) {
-      print("Error $e");
-    }
+  Future<void> updateNewsData(NewsAPI newsAPI) async {
+    List<Article> fetchedData = await getNewsWithCategory(newsAPI);
+    setState(() {
+      newsData = fetchedData;
+    });
   }
 
   @override
   void initState() {
     super.initState();
-    NewsAPI newsAPI = NewsAPI(apiKey: apiKey);
-    _getNewsWithCategory(newsAPI);
+    updateNewsData(newsAPI);
   }
 
   @override
   Widget build(BuildContext context) {
-    final pages = [HomePage(newsData: newsData), CategoriesPage()];
     return Scaffold(
       appBar: AppBar(
         title: Text('Echo News',
@@ -101,7 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
           IconButton(onPressed: () => {}, icon: const Icon(Icons.settings))
         ],
       ),
-      body: pages[_bottomNavigationBarIndex],
+      body: HomePage(newsData: newsData),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -116,42 +108,6 @@ class _MyHomePageState extends State<MyHomePage> {
         currentIndex: _bottomNavigationBarIndex,
         onTap: _onSelected,
         showUnselectedLabels: true,
-      ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({
-    super.key,
-    required this.newsData,
-  });
-
-  final List<Article> newsData;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          Flexible(
-            child: ListView.builder(
-              itemCount: newsData.length,
-              itemBuilder: (BuildContext context, int index) {
-                final Article item = newsData[index];
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => NewsPage(article: item)));
-                  },
-                  child: NewsCard(article: item),
-                );
-              },
-            ),
-          ),
-        ],
       ),
     );
   }

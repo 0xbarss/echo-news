@@ -1,9 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
+import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+
+Future<List<Article>> getNewsWithCategory(NewsAPI newsAPI, {String category="general"}) async {
+  List<Article> fetchedNewsData = [];
+  try {
+    fetchedNewsData = await newsAPI.getTopHeadlines(country: "us", category: category);
+    fetchedNewsData = fetchedNewsData
+        .map((article) => Article(
+        article.source,
+        article.author ?? 'Unknown Author',
+        article.title ?? 'No Title',
+        article.description ?? 'No Description',
+        article.url ?? 'No URL',
+        article.urlToImage ??
+            'https://i0.wp.com/poolpromag.com/wp-content/uploads/2020/02/News-Placeholder.jpg',
+        article.publishedAt ?? 'Unknown Date',
+        article.content ?? 'No Content'))
+        .where((article) => article.title != '[Removed]')
+        .toList();
+  } catch (e) {
+    print("Error $e");
+  }
+  return fetchedNewsData;
+}
 
 class NewsCard extends StatelessWidget {
   final Article article;
@@ -39,10 +63,10 @@ class NewsCard extends StatelessWidget {
   }
 }
 
-class NewsPage extends StatelessWidget {
+class NewsContentPage extends StatelessWidget {
   final Article article;
 
-  const NewsPage({super.key, required this.article});
+  const NewsContentPage({super.key, required this.article});
 
   Future<void> _shareLink(BuildContext context) async {
     final box = context.findRenderObject() as RenderBox?;
@@ -139,6 +163,44 @@ class NewsPage extends StatelessWidget {
                 }),
               ],
             )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NewsPage extends StatelessWidget {
+  const NewsPage({
+    super.key,
+    required this.newsData,
+  });
+
+  final List<Article> newsData;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      child: Center(
+        child: Column(
+          children: [
+            Flexible(
+              child: ListView.builder(
+                itemCount: newsData.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final Article item = newsData[index];
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => NewsContentPage(article: item)));
+                    },
+                    child: NewsCard(article: item),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
