@@ -1,3 +1,4 @@
+import 'package:echo_news/search.dart';
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
@@ -5,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'home.dart';
 import 'news_page.dart';
 import 'categories.dart';
+import 'search.dart';
 
 void main() {
   runApp(const MyApp());
@@ -46,16 +48,32 @@ class _MyHomePageState extends State<MyHomePage> {
       _bottomNavigationBarIndex = index;
     });
 
-    if (_bottomNavigationBarIndex == 2) {
+    if (_bottomNavigationBarIndex == 1) {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => CategoriesPage(newsAPI: newsAPI, onCategorySelected: (List<Article> selectedNewsData) {
-                setState(() {
-                  newsData = selectedNewsData;
-                  _bottomNavigationBarIndex = 0;
-                });
-              },)));
+              builder: (context) => SearchPage(
+                    newsAPI: newsAPI,
+                    onSearch: (List<Article> searchedNewsData) {
+                      setState(() {
+                        newsData = searchedNewsData;
+                        _bottomNavigationBarIndex = 0;
+                      });
+                    },
+                  )));
+    } else if (_bottomNavigationBarIndex == 2) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => CategoriesPage(
+                    newsAPI: newsAPI,
+                    onCategorySelected: (List<Article> selectedNewsData) {
+                      setState(() {
+                        newsData = selectedNewsData;
+                        _bottomNavigationBarIndex = 0;
+                      });
+                    },
+                  )));
     }
   }
 

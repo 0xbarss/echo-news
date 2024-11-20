@@ -6,25 +6,39 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 
+List<Article> organizeArticles(List<Article> newsData) {
+  return newsData.map((article) => Article(
+      article.source,
+      article.author ?? 'Unknown Author',
+      article.title ?? 'No Title',
+      article.description ?? 'No Description',
+      article.url ?? 'No URL',
+      article.urlToImage ??
+          'https://i0.wp.com/poolpromag.com/wp-content/uploads/2020/02/News-Placeholder.jpg',
+      article.publishedAt ?? 'Unknown Date',
+      article.content ?? 'No Content'))
+      .where((article) => article.title != '[Removed]')
+      .toList();
+}
+
+Future<List<Article>> getNewsWithSearch(NewsAPI newsAPI, String query) async {
+  List<Article> fetchedNewsData = [];
+  try {
+    fetchedNewsData = await newsAPI.getEverything(query: query, language: 'en');
+    fetchedNewsData = organizeArticles(fetchedNewsData);
+  } catch (e) {
+    //print("Error $e);
+  }
+  return fetchedNewsData;
+}
+
 Future<List<Article>> getNewsWithCategory(NewsAPI newsAPI, {String category="general"}) async {
   List<Article> fetchedNewsData = [];
   try {
     fetchedNewsData = await newsAPI.getTopHeadlines(country: "us", category: category);
-    fetchedNewsData = fetchedNewsData
-        .map((article) => Article(
-        article.source,
-        article.author ?? 'Unknown Author',
-        article.title ?? 'No Title',
-        article.description ?? 'No Description',
-        article.url ?? 'No URL',
-        article.urlToImage ??
-            'https://i0.wp.com/poolpromag.com/wp-content/uploads/2020/02/News-Placeholder.jpg',
-        article.publishedAt ?? 'Unknown Date',
-        article.content ?? 'No Content'))
-        .where((article) => article.title != '[Removed]')
-        .toList();
+    fetchedNewsData = organizeArticles(fetchedNewsData);
   } catch (e) {
-    print("Error $e");
+    //print("Error $e");
   }
   return fetchedNewsData;
 }
@@ -94,76 +108,78 @@ class NewsContentPage extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(10),
-        child: Column(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.network(article.urlToImage!, fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Image(
-                        image: AssetImage('assets/images/news-placeholder.jpg'),
-                        fit: BoxFit.cover);
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.network(article.urlToImage!, fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Image(
+                          image: AssetImage('assets/images/news-placeholder.jpg'),
+                          fit: BoxFit.cover);
+                    }),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Text(
+                article.title!,
+                style:
+                GoogleFonts.roboto(fontSize: 20, fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              InkWell(
+                onTap: () async => await launchUrl(Uri.parse(article.url!)),
+                child: Text(
+                    article.content!
+                        .replaceAll(RegExp(r"\s\[\+\d+\s+chars\]"), ""),
+                    style: GoogleFonts.roboto(
+                        fontSize: 18, fontWeight: FontWeight.w400)),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(article.author!.split(",")[0],
+                        style: GoogleFonts.roboto(
+                            fontStyle: FontStyle.italic,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400)),
+                  ),
+                  const Spacer(),
+                  Expanded(
+                    child: Text(
+                        DateFormat('MMMM dd, yyyy h:mm a')
+                            .format(DateTime.parse(article.publishedAt!))
+                            .toString(),
+                        style: GoogleFonts.roboto(
+                            fontStyle: FontStyle.italic,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400)),
+                  )
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Builder(builder: (context) {
+                    return IconButton(
+                      iconSize: 32,
+                      icon: const Icon(Icons.share),
+                      color: Colors.blue,
+                      onPressed: () => _shareLink(context),
+                    );
                   }),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            Text(
-              article.title!,
-              style:
-              GoogleFonts.roboto(fontSize: 20, fontWeight: FontWeight.w700),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            InkWell(
-              onTap: () async => await launchUrl(Uri.parse(article.url!)),
-              child: Text(
-                  article.content!
-                      .replaceAll(RegExp(r"\s\[\+\d+\s+chars\]"), ""),
-                  style: GoogleFonts.roboto(
-                      fontSize: 18, fontWeight: FontWeight.w400)),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(article.author!,
-                      style: GoogleFonts.roboto(
-                          fontStyle: FontStyle.italic,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400)),
-                ),
-                const Spacer(),
-                Expanded(
-                  child: Text(
-                      DateFormat('MMMM dd, yyyy h:mm a')
-                          .format(DateTime.parse(article.publishedAt!))
-                          .toString(),
-                      style: GoogleFonts.roboto(
-                          fontStyle: FontStyle.italic,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400)),
-                )
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Builder(builder: (context) {
-                  return IconButton(
-                    iconSize: 32,
-                    icon: const Icon(Icons.share),
-                    color: Colors.blue,
-                    onPressed: () => _shareLink(context),
-                  );
-                }),
-              ],
-            )
-          ],
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
