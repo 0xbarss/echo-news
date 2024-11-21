@@ -21,10 +21,10 @@ List<Article> organizeArticles(List<Article> newsData) {
       .toList();
 }
 
-Future<List<Article>> getNewsWithSearch(NewsAPI newsAPI, String query) async {
+Future<List<Article>> getNewsWithSearch(NewsAPI newsAPI, String query, {DateTime? fromDate, DateTime? toDate, String? sortBy}) async {
   List<Article> fetchedNewsData = [];
   try {
-    fetchedNewsData = await newsAPI.getEverything(query: query, language: 'en');
+    fetchedNewsData = await newsAPI.getEverything(query: query, from: fromDate, to: toDate, language: 'en', sortBy: sortBy);
     fetchedNewsData = organizeArticles(fetchedNewsData);
   } catch (e) {
     //print("Error $e);

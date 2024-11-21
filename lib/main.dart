@@ -1,4 +1,3 @@
-import 'package:echo_news/search.dart';
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
