@@ -124,10 +124,12 @@ class _SearchPageState extends State<SearchPage> {
             height: 20,
           ),
           TextField(
+            showCursor: true,
             controller: textEditingController,
             keyboardType: TextInputType.text,
             decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.search_rounded),
+                suffixIcon: Icon(Icons.arrow_back_sharp),
                 label: Text("Enter a keyword"),
                 contentPadding:
                     EdgeInsets.symmetric(vertical: 15, horizontal: 15),

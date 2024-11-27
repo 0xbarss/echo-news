@@ -15,8 +15,8 @@ List<Article> organizeArticles(List<Article> newsData) {
       article.url ?? 'No URL',
       article.urlToImage ??
           'https://i0.wp.com/poolpromag.com/wp-content/uploads/2020/02/News-Placeholder.jpg',
-      article.publishedAt ?? 'Unknown Date',
-      article.content ?? 'No Content'))
+      article.publishedAt ?? DateTime.now().toString(),
+      article.content ?? ''))
       .where((article) => article.title != '[Removed]')
       .toList();
 }
