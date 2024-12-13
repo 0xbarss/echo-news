@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:news_api_flutter_package/model/article.dart';
-import 'news_page.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'news.dart';
 
 class CategoriesPage extends StatelessWidget {
-  final NewsAPI newsAPI;
-  final Function(List<Article>) onCategorySelected;
-
-  CategoriesPage({super.key, required this.newsAPI, required this.onCategorySelected});
+  CategoriesPage({super.key});
 
   final List<String> categories = [
     'general',
@@ -33,27 +30,52 @@ class CategoriesPage extends StatelessWidget {
 
   Future<void> _navigateToSelectedCategoryPage(
       BuildContext context, String category) async {
+    final NewsAPI newsAPI = NewsAPIProvider.of(context).newsAPI;
     List<Article> newsData =
         await getNewsWithCategory(newsAPI, category: category);
 
-    onCategorySelected(newsData);
-
     if (context.mounted) {
-      Navigator.pop(context);
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => CategoryContentPage(
+                  category: toBeginningOfSentenceCase(category),
+                  newsData: newsData)));
     }
-    // if (context.mounted) {
-    //   Navigator.push(
-    //       context,
-    //       MaterialPageRoute(
-    //           builder: (context) => NewsPage(newsData: newsData)));
-    // }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          return InkWell(
+            child: Card(
+              child: ListTile(
+                leading: Icon(categoryIcons[index]),
+                trailing: const Icon(Icons.arrow_back_ios_new),
+                title: Text(toBeginningOfSentenceCase(categories[index])),
+                onTap: () =>
+                    _navigateToSelectedCategoryPage(context, categories[index]),
+              ),
+            ),
+          );
+        });
+  }
+}
+
+class CategoryContentPage extends StatelessWidget {
+  final String category;
+  final List<Article> newsData;
+
+  const CategoryContentPage(
+      {super.key, required this.category, required this.newsData});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Echo News',
+        title: Text(category,
             style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.w800)),
         flexibleSpace: const FlexibleSpaceBar(
           background: DecoratedBox(
@@ -65,20 +87,7 @@ class CategoriesPage extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: ListView.builder(
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            return InkWell(
-              child: Card(
-                child: ListTile(
-                  leading: Icon(categoryIcons[index]),
-                  trailing: const Icon(Icons.arrow_back_ios_new),
-                  title: Text(toBeginningOfSentenceCase(categories[index])),
-                  onTap: () => _navigateToSelectedCategoryPage(context, categories[index]),
-                ),
-              ),
-            );
-          }),
+      body: NewsPage(newsData: newsData),
     );
   }
 }

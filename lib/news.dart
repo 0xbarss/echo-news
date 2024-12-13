@@ -43,6 +43,26 @@ Future<List<Article>> getNewsWithCategory(NewsAPI newsAPI, {String category="gen
   return fetchedNewsData;
 }
 
+
+class NewsAPIProvider extends InheritedWidget {
+  final NewsAPI newsAPI;
+  const NewsAPIProvider(this.newsAPI, {
+    super.key, required super.child,
+  });
+
+  static NewsAPIProvider of(BuildContext context) {
+    final NewsAPIProvider? result = context.dependOnInheritedWidgetOfExactType<NewsAPIProvider>();
+    assert(result != null, 'No NewsAPIProvider found in context');
+    return result!;
+  }
+
+  @override
+  bool updateShouldNotify(NewsAPIProvider oldWidget) {
+    return newsAPI != oldWidget.newsAPI;
+  }
+}
+
+
 class NewsCard extends StatelessWidget {
   final Article article;
 
@@ -77,9 +97,9 @@ class NewsCard extends StatelessWidget {
   }
 }
 
+
 class NewsContentPage extends StatelessWidget {
   final Article article;
-
   const NewsContentPage({super.key, required this.article});
 
   Future<void> _shareLink(BuildContext context) async {
