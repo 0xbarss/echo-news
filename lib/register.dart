@@ -1,39 +1,20 @@
-import 'package:echo_news/register.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:news_api_flutter_package/model/article.dart';
-import 'package:news_api_flutter_package/news_api_flutter_package.dart';
-import 'news.dart';
-import 'home.dart';
+import 'login.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   bool _obscureText = false;
 
-  Future<void> _navigateToHomePage(BuildContext context) async {
-    NewsAPI newsAPI = NewsAPIProvider
-        .of(context)
-        .newsAPI;
-    List<Article> newsData = await getNewsWithCategory(newsAPI);
-
+  void _navigateToLoginPage(BuildContext context) {
     if (context.mounted) {
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => HomePage(newsData: newsData)));
-    }
-  }
-
-  void _navigateToRegisterPage(BuildContext context) {
-    if (context.mounted) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => const RegisterPage()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
     }
   }
 
@@ -54,6 +35,21 @@ class _LoginPageState extends State<LoginPage> {
             child: Icon(
               Icons.person_sharp,
               size: 144,
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(left: 24, right: 24, bottom: 16),
+            child: TextField(
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.name,
+              decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.person),
+                  label: Text("Username"),
+                  contentPadding:
+                  EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.zero),
+                  )),
             ),
           ),
           const Padding(
@@ -96,23 +92,8 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           ElevatedButton(
-              onPressed: () => _navigateToHomePage(context),
-              child: const Text("Login")),
-          const SizedBox(
-            height: 60,
-          ),
-          TextButton(onPressed: () {}, child: const Text("Forgot Password?")),
-          const SizedBox(
-            height: 60,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text("Doesn't have an account?"),
-              TextButton(onPressed: () => _navigateToRegisterPage(context),
-                  child: const Text("Sign Up!")),
-            ],
-          )
+              onPressed: () => _navigateToLoginPage(context),
+              child: const Text("Register")),
         ],
       ),
     );
