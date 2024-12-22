@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'news.dart';
 import 'search.dart';
 import 'categories.dart';
@@ -17,17 +18,42 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _bottomNavigationBarIndex = 0;
+  List<Article> newsData = [];
   final List<Widget> _pages = [];
+  bool _isNewsFetched = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isNewsFetched) {
+      getNewsData();
+      _isNewsFetched = true;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _pages.addAll([
-      NewsPage(newsData: widget.newsData),
+      const Center(child: CircularProgressIndicator()),
       const SearchPage(),
       CategoriesPage(),
       const BookmarksPage()
     ]);
+  }
+
+  Future<void> getNewsData() async {
+    NewsAPI newsAPI = NewsAPIProvider
+        .of(context)
+        .newsAPI;
+    List<Article> fetchedNewsData = await getNewsWithCategory(newsAPI);
+
+    if (context.mounted) {
+      setState(() {
+        newsData.addAll(fetchedNewsData);
+        _pages[0] = NewsPage(newsData: newsData);
+      });
+    }
   }
 
   void _onSelected(index) {

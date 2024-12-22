@@ -1,10 +1,8 @@
-import 'package:echo_news/register.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:news_api_flutter_package/model/article.dart';
-import 'package:news_api_flutter_package/news_api_flutter_package.dart';
-import 'news.dart';
 import 'home.dart';
+import 'register.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,26 +13,84 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _obscureText = false;
+  TextEditingController emailAddressController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
+  void showLoginDialog(BuildContext context, String message) {
+    showDialog(context: context, builder: (context) => AlertDialog(
+      title: const Text("Login Failed"),
+      content: Text(message),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))
+      ],
+    ));
+  }
+
+  Future<void> _onPressForgotPassword(BuildContext context) async {
+    if (emailAddressController.text.isEmpty) {
+      showLoginDialog(context, "Please enter an email");
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: emailAddressController.text);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-email') {
+        if (context.mounted) {
+          showLoginDialog(context, "Please enter a valid email");
+        }
+      }
+      return;
+    }
+
+    if (context.mounted) {
+      showLoginDialog(context, "Password reset link sent successfully.");
+    }
+  }
 
   Future<void> _navigateToHomePage(BuildContext context) async {
-    NewsAPI newsAPI = NewsAPIProvider
-        .of(context)
-        .newsAPI;
-    List<Article> newsData = await getNewsWithCategory(newsAPI);
+    if (emailAddressController.text.isEmpty || passwordController.text.isEmpty) return;
+
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailAddressController.text,
+          password: passwordController.text
+      );
+    } on FirebaseAuthException catch (e) {
+      if (context.mounted) {
+        if (e.code == 'user-not-found') {
+          showLoginDialog(context, 'No user found for that email.');
+        } else if (e.code == 'network-request-failed') {
+          showLoginDialog(context, 'There is no internet connection!');
+        } else if (e.code == 'invalid-credential') {
+          showLoginDialog(context, "Wrong e-mail or password provided.");
+        }
+        else {
+          showLoginDialog(context, e.code);
+        }
+      }
+      return;
+    }
 
     if (context.mounted) {
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (context) => HomePage(newsData: newsData)));
+              builder: (context) => const HomePage(newsData: [],)));
     }
   }
 
   void _navigateToRegisterPage(BuildContext context) {
     if (context.mounted) {
-      Navigator.pushReplacement(
+      Navigator.push(
           context, MaterialPageRoute(builder: (context) => const RegisterPage()));
     }
+  }
+
+  @override
+  void dispose() {
+    emailAddressController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -56,18 +112,19 @@ class _LoginPageState extends State<LoginPage> {
               size: 144,
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.only(left: 24, right: 24, bottom: 16),
+          Padding(
+            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
             child: TextField(
               textAlign: TextAlign.center,
+              controller: emailAddressController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.person),
-                  label: Text("E-mail"),
+                  prefixIcon: const Icon(Icons.email),
+                  label: const Text("E-mail"),
                   contentPadding:
-                  EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                  const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.zero),
+                    borderRadius: BorderRadius.circular(20),
                   )),
             ),
           ),
@@ -75,6 +132,7 @@ class _LoginPageState extends State<LoginPage> {
             padding: const EdgeInsets.only(left: 24, right: 24, bottom: 12),
             child: TextField(
               textAlign: TextAlign.center,
+              controller: passwordController,
               keyboardType: TextInputType.visiblePassword,
               obscureText: _obscureText,
               decoration: InputDecoration(
@@ -90,8 +148,8 @@ class _LoginPageState extends State<LoginPage> {
                   label: const Text("Password"),
                   contentPadding:
                   const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.zero),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
                   )),
             ),
           ),
@@ -101,7 +159,7 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(
             height: 60,
           ),
-          TextButton(onPressed: () {}, child: const Text("Forgot Password?")),
+          TextButton(onPressed: () => _onPressForgotPassword(context), child: const Text("Forgot Password?")),
           const SizedBox(
             height: 60,
           ),

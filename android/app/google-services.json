@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "374425801476",
+    "project_id": "echo-news-126fa",
+    "storage_bucket": "echo-news-126fa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374425801476:android:e56ad7497ffa18a4afb651",
+        "android_client_info": {
+          "package_name": "com.example.echo_news"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_HSKOPnLzIAg08i9sd7HRxI523NxwXZI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
