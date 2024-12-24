@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'news.dart';
 import 'search.dart';
 import 'categories.dart';
 import 'bookmarks.dart';
+import 'login.dart';
 
 class HomePage extends StatefulWidget {
   final List<Article> newsData;
@@ -62,6 +64,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _onPressProfile(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return const ProfilePage();
+    }));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +86,8 @@ class _HomePageState extends State<HomePage> {
         ),
         centerTitle: true,
         leading: IconButton(
-            onPressed: () => {}, icon: const Icon(Icons.person_2_sharp)),
+            onPressed: () => _onPressProfile(context),
+            icon: const Icon(Icons.person_2_sharp)),
         actions: [
           IconButton(onPressed: () => {}, icon: const Icon(Icons.settings))
         ],
@@ -98,6 +107,36 @@ class _HomePageState extends State<HomePage> {
         currentIndex: _bottomNavigationBarIndex,
         onTap: _onSelected,
         showUnselectedLabels: true,
+      ),
+    );
+  }
+}
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({
+    super.key,
+  });
+
+  void _navigateToLoginPage(BuildContext context) {
+    Navigator.pop(context);
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+  }
+
+  Future<void> _onPressSignOut(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    if (context.mounted) {
+      _navigateToLoginPage(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: ElevatedButton(
+            onPressed: () => _onPressSignOut(context),
+            child: const Text("Sign Out")),
       ),
     );
   }

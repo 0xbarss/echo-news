@@ -47,7 +47,18 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _navigateToHomePage(BuildContext context) async {
+  void _navigateToRegisterPage(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterPage()));
+  }
+
+  void _navigateToHomePage(BuildContext context) {
+    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => const HomePage(newsData: [],)));
+  }
+
+  Future<void> _onPressLogin(BuildContext context) async {
     if (emailAddressController.text.isEmpty || passwordController.text.isEmpty) return;
 
     try {
@@ -72,17 +83,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     if (context.mounted) {
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => const HomePage(newsData: [],)));
-    }
-  }
-
-  void _navigateToRegisterPage(BuildContext context) {
-    if (context.mounted) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => const RegisterPage()));
+      _navigateToHomePage(context);
     }
   }
 
@@ -154,7 +155,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           ElevatedButton(
-              onPressed: () => _navigateToHomePage(context),
+              onPressed: () => _onPressLogin(context),
               child: const Text("Login")),
           const SizedBox(
             height: 60,
