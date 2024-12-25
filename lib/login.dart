@@ -1,6 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'home.dart';
 import 'register.dart';
 
@@ -12,18 +11,22 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool _obscureText = false;
+  bool _obscureText = true;
   TextEditingController emailAddressController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
   void showLoginDialog(BuildContext context, String message) {
-    showDialog(context: context, builder: (context) => AlertDialog(
-      title: const Text("Login Failed"),
-      content: Text(message),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))
-      ],
-    ));
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text("Login Failed"),
+              content: Text(message),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Close"))
+              ],
+            ));
   }
 
   Future<void> _onPressForgotPassword(BuildContext context) async {
@@ -32,7 +35,8 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: emailAddressController.text);
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: emailAddressController.text);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-email') {
         if (context.mounted) {
@@ -48,24 +52,28 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _navigateToRegisterPage(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterPage()));
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => const RegisterPage()));
   }
 
   void _navigateToHomePage(BuildContext context) {
     Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (context) => const HomePage(newsData: [],)));
+            builder: (context) => const HomePage(
+                  newsData: [],
+                )));
   }
 
   Future<void> _onPressLogin(BuildContext context) async {
-    if (emailAddressController.text.isEmpty || passwordController.text.isEmpty) return;
+    if (emailAddressController.text.isEmpty || passwordController.text.isEmpty) {
+      return;
+    }
 
     try {
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailAddressController.text,
-          password: passwordController.text
-      );
+          password: passwordController.text);
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
         if (e.code == 'user-not-found') {
@@ -74,8 +82,7 @@ class _LoginPageState extends State<LoginPage> {
           showLoginDialog(context, 'There is no internet connection!');
         } else if (e.code == 'invalid-credential') {
           showLoginDialog(context, "Wrong e-mail or password provided.");
-        }
-        else {
+        } else {
           showLoginDialog(context, e.code);
         }
       }
@@ -104,8 +111,10 @@ class _LoginPageState extends State<LoginPage> {
             height: 60,
           ),
           Text("Welcome to EchoNews",
-              style:
-              GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.w800)),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
           const Padding(
             padding: EdgeInsets.all(24.0),
             child: Icon(
@@ -123,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                   prefixIcon: const Icon(Icons.email),
                   label: const Text("E-mail"),
                   contentPadding:
-                  const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                      const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                   )),
@@ -139,8 +148,7 @@ class _LoginPageState extends State<LoginPage> {
               decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: GestureDetector(
-                      onTap: () =>
-                          setState(() {
+                      onTap: () => setState(() {
                             _obscureText = !_obscureText;
                           }),
                       child: Icon(_obscureText
@@ -148,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
                           : Icons.visibility)),
                   label: const Text("Password"),
                   contentPadding:
-                  const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                      const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                   )),
@@ -160,7 +168,9 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(
             height: 60,
           ),
-          TextButton(onPressed: () => _onPressForgotPassword(context), child: const Text("Forgot Password?")),
+          TextButton(
+              onPressed: () => _onPressForgotPassword(context),
+              child: const Text("Forgot Password?")),
           const SizedBox(
             height: 60,
           ),
@@ -168,7 +178,8 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text("Doesn't have an account?"),
-              TextButton(onPressed: () => _navigateToRegisterPage(context),
+              TextButton(
+                  onPressed: () => _navigateToRegisterPage(context),
                   child: const Text("Sign Up!")),
             ],
           )

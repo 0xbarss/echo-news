@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:intl/intl.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -76,11 +75,9 @@ class NewsAPIProvider extends InheritedWidget {
 
 class NewsCard extends StatelessWidget {
   final Article article;
-  final textStyle =
-      GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w400);
   final placeHolderImage = 'assets/images/news-placeholder.jpg';
 
-  NewsCard({super.key, required this.article});
+  const NewsCard({super.key, required this.article});
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +98,8 @@ class NewsCard extends StatelessWidget {
           ),
           Padding(
               padding: const EdgeInsets.all(10),
-              child: Text(article.title!, style: textStyle)),
+              child: Text(article.title!,
+                  style: Theme.of(context).textTheme.bodyLarge)),
         ],
       ),
     );
@@ -110,17 +108,9 @@ class NewsCard extends StatelessWidget {
 
 class NewsContentPage extends StatelessWidget {
   final Article article;
-  final appBarFont =
-      GoogleFonts.roboto(fontSize: 20, fontWeight: FontWeight.w400);
-  final contentTitleFont =
-      GoogleFonts.roboto(fontSize: 20, fontWeight: FontWeight.w700);
-  final contentFont =
-      GoogleFonts.roboto(fontSize: 18, fontWeight: FontWeight.w400);
-  final contentInfoFont = GoogleFonts.roboto(
-      fontStyle: FontStyle.italic, fontSize: 14, fontWeight: FontWeight.w400);
   final placeHolderImage = 'assets/images/news-placeholder.jpg';
 
-  NewsContentPage({super.key, required this.article});
+  const NewsContentPage({super.key, required this.article});
 
   Future<void> _shareLink() async => await Share.share(
         article.url!,
@@ -131,7 +121,8 @@ class NewsContentPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(article.title!, style: appBarFont),
+        title: Text(article.title!,
+            style: Theme.of(context).textTheme.headlineSmall),
         actions: [
           IconButton(
               onPressed: () {},
@@ -159,7 +150,10 @@ class NewsContentPage extends StatelessWidget {
               ),
               Text(
                 article.title!,
-                style: contentTitleFont,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(
@@ -170,20 +164,27 @@ class NewsContentPage extends StatelessWidget {
                 child: Text(
                     article.content!
                         .replaceAll(RegExp(r"\s\[\+\d+\s+chars\]"), ""),
-                    style: contentFont),
+                    style: Theme.of(context).textTheme.bodyLarge),
               ),
               const SizedBox(
                 height: 10,
               ),
               Row(
                 children: [
-                  Text(article.author!.split(",")[0], style: contentInfoFont),
+                  Text(article.author!.split(",")[0],
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(fontStyle: FontStyle.italic)),
                   const Spacer(),
                   Text(
                       DateFormat('MMMM dd, yyyy h:mm a')
                           .format(DateTime.parse(article.publishedAt!))
                           .toString(),
-                      style: contentInfoFont)
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(fontStyle: FontStyle.italic))
                 ],
               ),
               Row(

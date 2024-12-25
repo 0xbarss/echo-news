@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -16,7 +15,8 @@ class _RegisterPageState extends State<RegisterPage> {
   TextEditingController passwordController = TextEditingController();
   bool _obscureText = false;
 
-  void showRegisterDialog(BuildContext context, {String title="Registration Failed", required String message}) {
+  void showRegisterDialog(BuildContext context,
+      {String title = "Registration Failed", required String message}) {
     showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -35,22 +35,28 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _onPressRegister(BuildContext context) async {
-    if (usernameController.text.isEmpty || emailController.text.isEmpty || passwordController.text.isEmpty) return;
+    if (usernameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty) return;
 
     final FirebaseAuth auth = FirebaseAuth.instance;
     final FirebaseFirestore db = FirebaseFirestore.instance;
 
     try {
-      QuerySnapshot querySnapshot = await db.collection("users").where("username", isEqualTo: usernameController.text).get();
+      QuerySnapshot querySnapshot = await db
+          .collection("users")
+          .where("username", isEqualTo: usernameController.text)
+          .get();
       if (querySnapshot.docs.isNotEmpty) {
         if (context.mounted) {
-          showRegisterDialog(context, message: "This username is already in use");
+          showRegisterDialog(context,
+              message: "This username is already in use");
         }
         return;
       }
 
-      final UserCredential userCredential = await auth
-          .createUserWithEmailAndPassword(
+      final UserCredential userCredential =
+          await auth.createUserWithEmailAndPassword(
               email: emailController.text, password: passwordController.text);
 
       db.collection("users").doc(userCredential.user!.uid).set({
@@ -61,9 +67,11 @@ class _RegisterPageState extends State<RegisterPage> {
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
         if (e.code == 'network-request-failed') {
-          showRegisterDialog(context, message: "There is no internet connection!");
+          showRegisterDialog(context,
+              message: "There is no internet connection!");
         } else if (e.code == 'weak-password') {
-          showRegisterDialog(context, message: "Please enter a stronger password");
+          showRegisterDialog(context,
+              message: "Please enter a stronger password");
         } else if (e.code == 'email-already-in-use') {
           showRegisterDialog(context, message: "This email is already in use");
         }
@@ -73,7 +81,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (context.mounted) {
       _navigateToLoginPage(context);
-      showRegisterDialog(context, title:"Registration Successful!", message: "Registration Successful!");
+      showRegisterDialog(context,
+          title: "Registration Successful!",
+          message: "Registration Successful!");
     }
   }
 
@@ -93,8 +103,10 @@ class _RegisterPageState extends State<RegisterPage> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Text("Welcome to EchoNews",
-              style:
-                  GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.w800)),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
           const Padding(
             padding: EdgeInsets.all(24.0),
             child: Icon(
@@ -112,7 +124,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   prefixIcon: Icon(Icons.person),
                   label: Text("Username"),
                   contentPadding:
-                  EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                      EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.zero),
                   )),

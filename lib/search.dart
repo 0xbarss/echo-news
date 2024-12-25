@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'news.dart';
 
@@ -39,7 +38,8 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  Future<void> _navigateToSearchedContentPage(BuildContext context, String query) async {
+  Future<void> _navigateToSearchedContentPage(
+      BuildContext context, String query) async {
     final NewsAPI newsAPI = NewsAPIProvider.of(context).newsAPI;
     List<Article> newsData = await getNewsWithSearch(newsAPI, query,
         fromDate: fromDate, toDate: toDate, sortBy: sortBy);
@@ -64,7 +64,7 @@ class _SearchPageState extends State<SearchPage> {
           subtitle: Text(fromDate == null
               ? "Select a date"
               : DateFormat('yyyy-MM-dd').format(fromDate!)),
-          trailing: const Icon(Icons.arrow_back_ios),
+          trailing: const Icon(Icons.arrow_forward_ios),
           onTap: () => pickDate(context, true),
         ),
         ListTile(
@@ -73,7 +73,7 @@ class _SearchPageState extends State<SearchPage> {
           subtitle: Text(toDate == null
               ? "Select a date"
               : DateFormat('yyyy-MM-dd').format(toDate!)),
-          trailing: const Icon(Icons.arrow_back_ios),
+          trailing: const Icon(Icons.arrow_forward_ios),
           onTap: () => pickDate(context, false),
         ),
         Row(
@@ -117,7 +117,8 @@ class _SearchPageState extends State<SearchPage> {
                   EdgeInsets.symmetric(vertical: 15, horizontal: 15),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(30)))),
-          onSubmitted: (value) => _navigateToSearchedContentPage(context, value),
+          onSubmitted: (value) =>
+              _navigateToSearchedContentPage(context, value),
         )
       ],
     );
@@ -135,8 +136,7 @@ class SearchContentPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(query,
-            style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.w800)),
+        title: Text(query, style: Theme.of(context).textTheme.headlineSmall),
         flexibleSpace: const FlexibleSpaceBar(
           background: DecoratedBox(
               decoration: BoxDecoration(

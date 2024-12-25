@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:news_api_flutter_package/model/article.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'news.dart';
 
@@ -53,7 +52,7 @@ class CategoriesPage extends StatelessWidget {
             child: Card(
               child: ListTile(
                 leading: Icon(categoryIcons[index]),
-                trailing: const Icon(Icons.arrow_back_ios_new),
+                trailing: const Icon(Icons.arrow_forward_ios),
                 title: Text(toBeginningOfSentenceCase(categories[index])),
                 onTap: () =>
                     _navigateToSelectedCategoryPage(context, categories[index]),
@@ -75,8 +74,7 @@ class CategoryContentPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(category,
-            style: GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.w800)),
+        title: Text(category, style: Theme.of(context).textTheme.headlineSmall),
         flexibleSpace: const FlexibleSpaceBar(
           background: DecoratedBox(
               decoration: BoxDecoration(
