@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -10,6 +11,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool _obscureText = false;
@@ -33,12 +35,29 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _onPressRegister(BuildContext context) async {
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) return;
+    if (usernameController.text.isEmpty || emailController.text.isEmpty || passwordController.text.isEmpty) return;
+
+    final FirebaseAuth auth = FirebaseAuth.instance;
+    final FirebaseFirestore db = FirebaseFirestore.instance;
 
     try {
-      final credential = await FirebaseAuth.instance
+      QuerySnapshot querySnapshot = await db.collection("users").where("username", isEqualTo: usernameController.text).get();
+      if (querySnapshot.docs.isNotEmpty) {
+        if (context.mounted) {
+          showRegisterDialog(context, "This username is already in use");
+        }
+        return;
+      }
+
+      final UserCredential userCredential = await auth
           .createUserWithEmailAndPassword(
               email: emailController.text, password: passwordController.text);
+
+      db.collection("users").doc(userCredential.user!.uid).set({
+        "username": usernameController.text,
+        "e-mail": emailController.text,
+        "password": passwordController.text
+      });
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
         if (e.code == 'network-request-failed') {
@@ -67,12 +86,10 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          const SizedBox(
-            height: 60,
-          ),
           Text("Welcome to EchoNews",
               style:
                   GoogleFonts.lato(fontSize: 24, fontWeight: FontWeight.w800)),
@@ -87,10 +104,26 @@ class _RegisterPageState extends State<RegisterPage> {
             padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
             child: TextField(
               textAlign: TextAlign.center,
+              keyboardType: TextInputType.text,
+              controller: usernameController,
+              decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.person),
+                  label: Text("Username"),
+                  contentPadding:
+                  EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.zero),
+                  )),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+            child: TextField(
+              textAlign: TextAlign.center,
               keyboardType: TextInputType.emailAddress,
               controller: emailController,
               decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: Icon(Icons.email),
                   label: Text("E-mail"),
                   contentPadding:
                       EdgeInsets.symmetric(vertical: 15, horizontal: 15),
