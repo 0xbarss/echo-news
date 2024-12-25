@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -45,9 +46,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> getNewsData() async {
-    NewsAPI newsAPI = NewsAPIProvider
-        .of(context)
-        .newsAPI;
+    NewsAPI newsAPI = NewsAPIProvider.of(context).newsAPI;
     List<Article> fetchedNewsData = await getNewsWithCategory(newsAPI);
 
     if (context.mounted) {
@@ -66,7 +65,7 @@ class _HomePageState extends State<HomePage> {
 
   void _onPressProfile(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return const ProfilePage();
+      return ProfilePage();
     }));
   }
 
@@ -112,14 +111,30 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({
     super.key,
   });
 
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final User? user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore db = FirebaseFirestore.instance;
+  late Map<String, String> userInformation;
+
+  @override
+  void initState() {
+    super.initState();
+    getProfileInformation();
+  }
+
   void _navigateToLoginPage(BuildContext context) {
     Navigator.pop(context);
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => const LoginPage()));
   }
 
   Future<void> _onPressSignOut(BuildContext context) async {
@@ -129,14 +144,81 @@ class ProfilePage extends StatelessWidget {
     }
   }
 
+  Future<void> getProfileInformation() async {
+    final DocumentSnapshot userDoc =
+        await db.collection("users").doc(user?.uid).get();
+    userInformation = {
+      "username": userDoc["username"],
+      "e-mail": userDoc["e-mail"],
+      "password": userDoc["password"]
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body: Center(
-        child: ElevatedButton(
-            onPressed: () => _onPressSignOut(context),
-            child: const Text("Sign Out")),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+            gradient: LinearGradient(
+                colors: [Colors.orange, Colors.red],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter)),
+        child: Center(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Stack(
+                  children: [
+                    const CircleAvatar(
+                        radius: 70, backgroundColor: Colors.white),
+                    Positioned(
+                        bottom: 10,
+                        right: 0,
+                        child: IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.edit,
+                              color: Colors.black,
+                            )))
+                  ],
+                ),
+              ),
+              if (userInformation != null) ProfilePageCard(title: "Username", userInformation: userInformation["username"]!, icon: Icons.person,),
+              if (userInformation != null) ProfilePageCard(title: "E-Mail", userInformation: userInformation["e-mail"]!, icon: Icons.email,),
+              if (userInformation != null) ProfilePageCard(title: "Password", userInformation: userInformation["password"]!, icon: Icons.lock,),
+              ElevatedButton(onPressed: () {}, child: const Text("Sign Out")),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ProfilePageCard extends StatelessWidget {
+  const ProfilePageCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.userInformation,
+  });
+
+  final String title;
+  final IconData icon;
+  final String userInformation;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 15),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20)),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        trailing: Text(userInformation),
       ),
     );
   }

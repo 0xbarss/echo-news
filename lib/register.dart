@@ -16,11 +16,11 @@ class _RegisterPageState extends State<RegisterPage> {
   TextEditingController passwordController = TextEditingController();
   bool _obscureText = false;
 
-  void showRegisterDialog(BuildContext context, String message) {
+  void showRegisterDialog(BuildContext context, {String title="Registration Failed", required String message}) {
     showDialog(
         context: context,
         builder: (context) => AlertDialog(
-              title: const Text("Register Failed"),
+              title: Text(title),
               content: Text(message),
               actions: [
                 TextButton(
@@ -44,7 +44,7 @@ class _RegisterPageState extends State<RegisterPage> {
       QuerySnapshot querySnapshot = await db.collection("users").where("username", isEqualTo: usernameController.text).get();
       if (querySnapshot.docs.isNotEmpty) {
         if (context.mounted) {
-          showRegisterDialog(context, "This username is already in use");
+          showRegisterDialog(context, message: "This username is already in use");
         }
         return;
       }
@@ -61,11 +61,11 @@ class _RegisterPageState extends State<RegisterPage> {
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
         if (e.code == 'network-request-failed') {
-          showRegisterDialog(context, "There is no internet connection!");
+          showRegisterDialog(context, message: "There is no internet connection!");
         } else if (e.code == 'weak-password') {
-          showRegisterDialog(context, "Please enter a stronger password");
+          showRegisterDialog(context, message: "Please enter a stronger password");
         } else if (e.code == 'email-already-in-use') {
-          showRegisterDialog(context, "This email is already in use");
+          showRegisterDialog(context, message: "This email is already in use");
         }
       }
       return;
@@ -73,11 +73,13 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (context.mounted) {
       _navigateToLoginPage(context);
+      showRegisterDialog(context, title:"Registration Successful!", message: "Registration Successful!");
     }
   }
 
   @override
   void dispose() {
+    usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
