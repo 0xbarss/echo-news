@@ -55,72 +55,75 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ListTile(
-          leading: const Icon(Icons.date_range),
-          title: const Text("From Date"),
-          subtitle: Text(fromDate == null
-              ? "Select a date"
-              : DateFormat('yyyy-MM-dd').format(fromDate!)),
-          trailing: const Icon(Icons.arrow_forward_ios),
-          onTap: () => pickDate(context, true),
-        ),
-        ListTile(
-          leading: const Icon(Icons.date_range),
-          title: const Text("To Date"),
-          subtitle: Text(toDate == null
-              ? "Select a date"
-              : DateFormat('yyyy-MM-dd').format(toDate!)),
-          trailing: const Icon(Icons.arrow_forward_ios),
-          onTap: () => pickDate(context, false),
-        ),
-        Row(
-          children: [
-            const SizedBox(
-              width: 16,
-            ),
-            const Icon(Icons.sort),
-            const SizedBox(
-              width: 16,
-            ),
-            DropdownButton<String>(
-              value: sortBy,
-              items: sortOptions.entries.map((entry) {
-                return DropdownMenuItem<String>(
-                  value: entry.key,
-                  child: Text(entry.value),
-                );
-              }).toList(),
-              onChanged: (String? value) {
-                if (value != null) {
-                  setState(() {
-                    sortBy = value;
-                  });
-                }
-              },
-            )
-          ],
-        ),
-        const SizedBox(
-          height: 20,
-        ),
-        TextField(
-          showCursor: true,
-          keyboardType: TextInputType.text,
-          decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.search_rounded),
-              suffixIcon: Icon(Icons.arrow_back_sharp),
-              label: Text("Enter a keyword"),
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(30)))),
-          onSubmitted: (value) =>
-              _navigateToSearchedContentPage(context, value),
-        )
-      ],
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Color(0x90E9DACC)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.date_range),
+            title: const Text("From Date"),
+            subtitle: Text(fromDate == null
+                ? "Select a date"
+                : DateFormat('yyyy-MM-dd').format(fromDate!)),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () => pickDate(context, true),
+          ),
+          ListTile(
+            leading: const Icon(Icons.date_range),
+            title: const Text("To Date"),
+            subtitle: Text(toDate == null
+                ? "Select a date"
+                : DateFormat('yyyy-MM-dd').format(toDate!)),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () => pickDate(context, false),
+          ),
+          Row(
+            children: [
+              const SizedBox(
+                width: 16,
+              ),
+              const Icon(Icons.sort),
+              const SizedBox(
+                width: 16,
+              ),
+              DropdownButton<String>(
+                value: sortBy,
+                items: sortOptions.entries.map((entry) {
+                  return DropdownMenuItem<String>(
+                    value: entry.key,
+                    child: Text(entry.value),
+                  );
+                }).toList(),
+                onChanged: (String? value) {
+                  if (value != null) {
+                    setState(() {
+                      sortBy = value;
+                    });
+                  }
+                },
+              )
+            ],
+          ),
+          const SizedBox(
+            height: 20,
+          ),
+          TextField(
+            showCursor: true,
+            keyboardType: TextInputType.text,
+            decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search_rounded),
+                suffixIcon: Icon(Icons.arrow_back_sharp),
+                label: Text("Enter a keyword"),
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(30)))),
+            onSubmitted: (value) =>
+                _navigateToSearchedContentPage(context, value),
+          )
+        ],
+      ),
     );
   }
 }

@@ -45,21 +45,24 @@ class CategoriesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          return InkWell(
-            child: Card(
-              child: ListTile(
-                leading: Icon(categoryIcons[index]),
-                trailing: const Icon(Icons.arrow_forward_ios),
-                title: Text(toBeginningOfSentenceCase(categories[index])),
-                onTap: () =>
-                    _navigateToSelectedCategoryPage(context, categories[index]),
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Color(0x90E9DACC)),
+      child: ListView.builder(
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            return InkWell(
+              child: Card(
+                child: ListTile(
+                  leading: Icon(categoryIcons[index]),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  title: Text(toBeginningOfSentenceCase(categories[index])),
+                  onTap: () =>
+                      _navigateToSelectedCategoryPage(context, categories[index]),
+                ),
               ),
-            ),
-          );
-        });
+            );
+          }),
+    );
   }
 }
 

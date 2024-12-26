@@ -11,15 +11,16 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool _obscureText = true;
   TextEditingController emailAddressController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  final String logoPath = 'assets/images/logo.png';
+  bool _obscureText = true;
 
-  void showLoginDialog(BuildContext context, String message) {
+  void showLoginDialog(BuildContext context, {String title="Login Failed", required String message}) {
     showDialog(
         context: context,
         builder: (context) => AlertDialog(
-              title: const Text("Login Failed"),
+              title: Text(title),
               content: Text(message),
               actions: [
                 TextButton(
@@ -31,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _onPressForgotPassword(BuildContext context) async {
     if (emailAddressController.text.isEmpty) {
-      showLoginDialog(context, "Please enter an email");
+      showLoginDialog(context, title: "Request Successful", message: "Please enter an email.");
     }
 
     try {
@@ -40,14 +41,14 @@ class _LoginPageState extends State<LoginPage> {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-email') {
         if (context.mounted) {
-          showLoginDialog(context, "Please enter a valid email");
+          showLoginDialog(context, title: "Request Failed", message: "Please enter a valid email.");
         }
       }
       return;
     }
 
     if (context.mounted) {
-      showLoginDialog(context, "Password reset link sent successfully.");
+      showLoginDialog(context, title: "Request Successful", message: "Password reset link sent successfully.");
     }
   }
 
@@ -77,13 +78,11 @@ class _LoginPageState extends State<LoginPage> {
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
         if (e.code == 'user-not-found') {
-          showLoginDialog(context, 'No user found for that email.');
+          showLoginDialog(context, message: 'No user found for that email.');
         } else if (e.code == 'network-request-failed') {
-          showLoginDialog(context, 'There is no internet connection!');
+          showLoginDialog(context, message: 'There is no internet connection!');
         } else if (e.code == 'invalid-credential') {
-          showLoginDialog(context, "Wrong e-mail or password provided.");
-        } else {
-          showLoginDialog(context, e.code);
+          showLoginDialog(context, message: "Wrong e-mail or password provided.");
         }
       }
       return;
@@ -104,86 +103,87 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          const SizedBox(
-            height: 60,
-          ),
-          Text("Welcome to EchoNews",
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.bold)),
-          const Padding(
-            padding: EdgeInsets.all(24.0),
-            child: Icon(
-              Icons.person_sharp,
-              size: 144,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(color: Color(0x102B394D)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const SizedBox(
+              height: 60,
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
-            child: TextField(
-              textAlign: TextAlign.center,
-              controller: emailAddressController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.email),
-                  label: const Text("E-mail"),
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  )),
+            Text("Welcome to EchoNews",
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineMedium
+                    ?.copyWith(fontWeight: FontWeight.bold, color: const Color(0xFF2B394D))),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Image.asset(logoPath, height: 250,),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 12),
-            child: TextField(
-              textAlign: TextAlign.center,
-              controller: passwordController,
-              keyboardType: TextInputType.visiblePassword,
-              obscureText: _obscureText,
-              decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.lock),
-                  suffixIcon: GestureDetector(
-                      onTap: () => setState(() {
-                            _obscureText = !_obscureText;
-                          }),
-                      child: Icon(_obscureText
-                          ? Icons.visibility_off
-                          : Icons.visibility)),
-                  label: const Text("Password"),
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  )),
+            Padding(
+              padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+              child: TextField(
+                textAlign: TextAlign.center,
+                controller: emailAddressController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.email),
+                    label: const Text("E-mail"),
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    )),
+              ),
             ),
-          ),
-          ElevatedButton(
-              onPressed: () => _onPressLogin(context),
-              child: const Text("Login")),
-          const SizedBox(
-            height: 60,
-          ),
-          TextButton(
-              onPressed: () => _onPressForgotPassword(context),
-              child: const Text("Forgot Password?")),
-          const SizedBox(
-            height: 60,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text("Doesn't have an account?"),
-              TextButton(
-                  onPressed: () => _navigateToRegisterPage(context),
-                  child: const Text("Sign Up!")),
-            ],
-          )
-        ],
+            Padding(
+              padding: const EdgeInsets.only(left: 24, right: 24, bottom: 12),
+              child: TextField(
+                textAlign: TextAlign.center,
+                controller: passwordController,
+                keyboardType: TextInputType.visiblePassword,
+                obscureText: _obscureText,
+                decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: GestureDetector(
+                        onTap: () => setState(() {
+                              _obscureText = !_obscureText;
+                            }),
+                        child: Icon(_obscureText
+                            ? Icons.visibility_off
+                            : Icons.visibility)),
+                    label: const Text("Password"),
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    )),
+              ),
+            ),
+            ElevatedButton(
+              style: const ButtonStyle(backgroundColor: WidgetStatePropertyAll(Colors.white)),
+                onPressed: () => _onPressLogin(context),
+                child: const Text("Login")),
+            const SizedBox(
+              height: 60,
+            ),
+            TextButton(
+                onPressed: () => _onPressForgotPassword(context),
+                child: const Text("Forgot Password?")),
+            const SizedBox(
+              height: 60,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Doesn't have an account?"),
+                TextButton(
+                    onPressed: () => _navigateToRegisterPage(context),
+                    child: const Text("Sign Up!")),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }

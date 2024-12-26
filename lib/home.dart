@@ -23,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   List<Article> newsData = [];
   final List<Widget> _pages = [];
   bool _isNewsFetched = false;
+  final String logoPath = 'assets/images/logo.png';
 
   @override
   void didChangeDependencies() {
@@ -72,11 +73,20 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Echo News',
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold)),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              logoPath,
+              height: 30,
+            ),
+            Text('Echo News',
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold)),
+          ],
+        ),
         flexibleSpace: const FlexibleSpaceBar(
           background: DecoratedBox(
               decoration: BoxDecoration(
@@ -131,6 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final User? user = FirebaseAuth.instance.currentUser;
   final FirebaseFirestore db = FirebaseFirestore.instance;
   Map<String, String> userInformation = {};
+  final String logoPath = 'assets/images/logo.png';
 
   @override
   void initState() {
@@ -165,67 +176,74 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0x90E9DACC),
         title: Text(
           "Profile",
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Center(
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  const CircleAvatar(radius: 70, backgroundColor: Colors.white),
-                  Positioned(
-                      bottom: 10,
-                      right: 0,
-                      child: IconButton(
-                          onPressed: () {},
-                          icon: const Icon(
-                            Icons.edit,
-                            color: Colors.black,
-                          )))
-                ],
-              ),
-              const SizedBox(
-                height: 40,
-              ),
-              ProfilePageCard(
-                  title: "My Account",
-                  icon: Icons.person_outline_outlined,
-                  func: () => {}),
-              const SizedBox(
-                height: 20,
-              ),
-              ProfilePageCard(
-                  title: "Notifications",
-                  icon: Icons.notifications_none_outlined,
-                  func: () => {}),
-              const SizedBox(
-                height: 20,
-              ),
-              ProfilePageCard(
-                  title: "Settings",
-                  icon: Icons.settings_outlined,
-                  func: () => {}),
-              const SizedBox(
-                height: 20,
-              ),
-              ProfilePageCard(
-                  title: "Help Center",
-                  icon: Icons.help_outline_outlined,
-                  func: () => {}),
-              const SizedBox(
-                height: 20,
-              ),
-              ProfilePageCard(
-                  title: "Sign Out",
-                  icon: Icons.logout,
-                  func: () => _onPressSignOut(context)),
-            ],
+      body: DecoratedBox(
+        decoration: const BoxDecoration(color: Color(0x90E9DACC)),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Center(
+            child: Column(
+              children: [
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 70,
+                      child: Image.asset(logoPath),
+                    ),
+                    Positioned(
+                        bottom: 5,
+                        right: 0,
+                        child: IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.edit,
+                              color: Colors.black,
+                            )))
+                  ],
+                ),
+                const SizedBox(
+                  height: 40,
+                ),
+                ProfilePageCard(
+                    title: "My Account",
+                    icon: Icons.person_outline_outlined,
+                    func: () => {}),
+                const SizedBox(
+                  height: 20,
+                ),
+                ProfilePageCard(
+                    title: "Notifications",
+                    icon: Icons.notifications_none_outlined,
+                    func: () => {}),
+                const SizedBox(
+                  height: 20,
+                ),
+                ProfilePageCard(
+                    title: "Settings",
+                    icon: Icons.settings_outlined,
+                    func: () => {}),
+                const SizedBox(
+                  height: 20,
+                ),
+                ProfilePageCard(
+                    title: "Help Center",
+                    icon: Icons.help_outline_outlined,
+                    func: () => {}),
+                const SizedBox(
+                  height: 20,
+                ),
+                ProfilePageCard(
+                    title: "Sign Out",
+                    icon: Icons.logout,
+                    func: () => _onPressSignOut(context)),
+              ],
+            ),
           ),
         ),
       ),

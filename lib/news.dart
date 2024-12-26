@@ -75,7 +75,7 @@ class NewsAPIProvider extends InheritedWidget {
 
 class NewsCard extends StatelessWidget {
   final Article article;
-  final placeHolderImage = 'assets/images/news-placeholder.jpg';
+  final String placeHolderImage = 'assets/images/news-placeholder.jpg';
 
   const NewsCard({super.key, required this.article});
 
@@ -219,6 +219,7 @@ class NewsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
+      color: const Color(0x90E9DACC),
       child: Center(
         child: Column(
           children: [
