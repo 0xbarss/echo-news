@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -138,21 +139,36 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final User? user = FirebaseAuth.instance.currentUser;
-  final FirebaseFirestore db = FirebaseFirestore.instance;
-  Map<String, String> userInformation = {};
   final String logoPath = 'assets/images/logo.png';
 
   @override
   void initState() {
-    getProfileInformation();
     super.initState();
   }
 
+  void _onPressMyAccount() {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => const EditProfilePage()));
+  }
+
   void _navigateToLoginPage(BuildContext context) {
-    Navigator.pop(context);
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => const LoginPage()));
+  }
+
+  void _navigateToNotificationsPage(BuildContext context) {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => const NotificationsPage()));
+  }
+
+  void _navigateToSettingsPage(BuildContext context) {
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => const SettingsPage()));
+  }
+
+  void _navigateToHelpCenterPage(BuildContext context) {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => const HelpCenterPage()));
   }
 
   Future<void> _onPressSignOut(BuildContext context) async {
@@ -162,16 +178,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> getProfileInformation() async {
-    final DocumentSnapshot userDoc =
-        await db.collection("users").doc(user?.uid).get();
-    userInformation.addAll({
-      "username": userDoc["username"],
-      "e-mail": userDoc["e-mail"],
-      "password": userDoc["password"]
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -179,7 +185,10 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: const Color(0x90E9DACC),
         title: Text(
           "Profile",
-          style: Theme.of(context).textTheme.headlineSmall,
+          style: Theme.of(context)
+              .textTheme
+              .headlineSmall
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -187,63 +196,48 @@ class _ProfilePageState extends State<ProfilePage> {
         decoration: const BoxDecoration(color: Color(0x90E9DACC)),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
-          child: Center(
-            child: Column(
-              children: [
-                Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 70,
-                      child: Image.asset(logoPath),
-                    ),
-                    Positioned(
-                        bottom: 5,
-                        right: 0,
-                        child: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.edit,
-                              color: Colors.black,
-                            )))
-                  ],
-                ),
-                const SizedBox(
-                  height: 40,
-                ),
-                ProfilePageCard(
-                    title: "My Account",
-                    icon: Icons.person_outline_outlined,
-                    func: () => {}),
-                const SizedBox(
-                  height: 20,
-                ),
-                ProfilePageCard(
-                    title: "Notifications",
-                    icon: Icons.notifications_none_outlined,
-                    func: () => {}),
-                const SizedBox(
-                  height: 20,
-                ),
-                ProfilePageCard(
-                    title: "Settings",
-                    icon: Icons.settings_outlined,
-                    func: () => {}),
-                const SizedBox(
-                  height: 20,
-                ),
-                ProfilePageCard(
-                    title: "Help Center",
-                    icon: Icons.help_outline_outlined,
-                    func: () => {}),
-                const SizedBox(
-                  height: 20,
-                ),
-                ProfilePageCard(
-                    title: "Sign Out",
-                    icon: Icons.logout,
-                    func: () => _onPressSignOut(context)),
-              ],
-            ),
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 70,
+                child: Image.asset(logoPath),
+              ),
+              const SizedBox(
+                height: 40,
+              ),
+              ProfilePageCard(
+                  title: "My Account",
+                  leadingIcon: const Icon(Icons.person_outline_outlined),
+                  func: _onPressMyAccount),
+              const SizedBox(
+                height: 20,
+              ),
+              ProfilePageCard(
+                  title: "Notifications",
+                  leadingIcon: const Icon(Icons.notifications_none_outlined),
+                  func: () => _navigateToNotificationsPage(context)),
+              const SizedBox(
+                height: 20,
+              ),
+              ProfilePageCard(
+                  title: "Settings",
+                  leadingIcon: const Icon(Icons.settings_outlined),
+                  func: () => _navigateToSettingsPage(context)),
+              const SizedBox(
+                height: 20,
+              ),
+              ProfilePageCard(
+                  title: "Help Center",
+                  leadingIcon: const Icon(Icons.help_outline_outlined),
+                  func: () => _navigateToHelpCenterPage(context)),
+              const SizedBox(
+                height: 20,
+              ),
+              ProfilePageCard(
+                  title: "Sign Out",
+                  leadingIcon: const Icon(Icons.logout),
+                  func: () => _onPressSignOut(context)),
+            ],
           ),
         ),
       ),
@@ -255,12 +249,12 @@ class ProfilePageCard extends StatelessWidget {
   const ProfilePageCard({
     super.key,
     required this.title,
-    required this.icon,
+    required this.leadingIcon,
     required this.func,
   });
 
   final String title;
-  final IconData icon;
+  final Widget leadingIcon;
   final GestureTapCallback func;
 
   @override
@@ -269,11 +263,239 @@ class ProfilePageCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 15),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ListTile(
-        leading: Icon(icon),
+        leading: leadingIcon,
         title: Text(title),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: func,
       ),
+    );
+  }
+}
+
+class EditProfilePage extends StatefulWidget {
+  const EditProfilePage({super.key});
+
+  @override
+  State<EditProfilePage> createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  final User? user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore db = FirebaseFirestore.instance;
+  final TextEditingController usernameController = TextEditingController(text: "");
+  final TextEditingController emailController = TextEditingController(text: "");
+  bool _isNotCompleted = true;
+  final String logoPath = 'assets/images/logo.png';
+
+  Future<void> getProfileInformation() async {
+    final DocumentSnapshot userDoc =
+        await db.collection("users").doc(user?.uid).get();
+    setState(() {
+      usernameController.text = userDoc["username"];
+      emailController.text = user!.email!;
+    });
+    _isNotCompleted = false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getProfileInformation();
+  }
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
+
+  void showUpdateStatus(BuildContext context, {required String message}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 3),
+    ));
+  }
+
+  Future<void> updateData(BuildContext context) async {
+    try {
+      if (emailController.text.isNotEmpty) {
+        await user?.verifyBeforeUpdateEmail(emailController.text);
+      }
+      if (usernameController.text.isNotEmpty) {
+        QuerySnapshot querySnapshot = await db
+            .collection("users")
+            .where("username", isEqualTo: usernameController.text)
+            .get();
+        if (querySnapshot.docs.isNotEmpty) {
+          if (context.mounted) {
+            showUpdateStatus(context,
+                message: "This username is already in use");
+          }
+          return;
+        }
+        db.collection("users").doc(user!.uid).update({"username": usernameController.text});
+        if (context.mounted) {
+          showUpdateStatus(context, message: "Username changed successfully");
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        if (context.mounted) {
+          showUpdateStatus(context, message: "This email is already in use");
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isNotCompleted) {
+      return const Scaffold(
+          body: DecoratedBox(
+              decoration: BoxDecoration(color: Color(0x90E9DACC)),
+              child: Center(child: CircularProgressIndicator())));
+    }
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0x90E9DACC),
+        centerTitle: true,
+        title: Text(
+          "Edit Profile",
+          style: Theme.of(context)
+              .textTheme
+              .headlineSmall
+              ?.copyWith(fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: DecoratedBox(
+          decoration: const BoxDecoration(color: Color(0x90E9DACC)),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 70,
+                  child: Image.asset(logoPath),
+                ),
+                const SizedBox(
+                  height: 40,
+                ),
+                EditProfilePageCard(
+                  title: "username",
+                  prefixIcon: const Icon(Icons.person_2_sharp),
+                  controller: usernameController,
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                EditProfilePageCard(
+                  title: "e-mail",
+                  prefixIcon: const Icon(Icons.email),
+                  controller: emailController,
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                ElevatedButton(
+                    onPressed: () => updateData(context), child: const Text("Update"))
+              ],
+            ),
+          )),
+    );
+  }
+}
+
+class EditProfilePageCard extends StatefulWidget {
+  const EditProfilePageCard({
+    super.key,
+    required this.title,
+    required this.prefixIcon,
+    required this.controller,
+  });
+
+  final String title;
+  final Widget prefixIcon;
+  final TextEditingController controller;
+
+  @override
+  State<EditProfilePageCard> createState() => _EditProfilePageCardState();
+}
+
+class _EditProfilePageCardState extends State<EditProfilePageCard> {
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      showCursor: true,
+      controller: widget.controller,
+      keyboardType: TextInputType.text,
+      decoration: InputDecoration(
+          prefixIcon: widget.prefixIcon,
+          suffixIcon: const Icon(Icons.edit),
+          labelText: toBeginningOfSentenceCase(widget.title),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+          border: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(30)))),
+    );
+  }
+}
+
+class NotificationsPage extends StatefulWidget {
+  const NotificationsPage({super.key});
+
+  @override
+  State<NotificationsPage> createState() => _NotificationsPageState();
+}
+
+class _NotificationsPageState extends State<NotificationsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0x90E9DACC),
+      ),
+      body: const DecoratedBox(
+          decoration: BoxDecoration(color: Color(0x90E9DACC)),
+          child: Center(child: CircularProgressIndicator())),
+    );
+  }
+}
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(backgroundColor: const Color(0x90E9DACC)),
+      body: const DecoratedBox(
+          decoration: BoxDecoration(color: Color(0x90E9DACC)),
+          child: Center(child: CircularProgressIndicator())),
+    );
+  }
+}
+
+class HelpCenterPage extends StatefulWidget {
+  const HelpCenterPage({super.key});
+
+  @override
+  State<HelpCenterPage> createState() => _HelpCenterPageState();
+}
+
+class _HelpCenterPageState extends State<HelpCenterPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(backgroundColor: const Color(0x90E9DACC)),
+      body: const DecoratedBox(
+          decoration: BoxDecoration(color: Color(0x90E9DACC)),
+          child: Center(child: CircularProgressIndicator())),
     );
   }
 }

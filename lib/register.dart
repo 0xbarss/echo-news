@@ -16,19 +16,11 @@ class _RegisterPageState extends State<RegisterPage> {
   final String logoPath = 'assets/images/logo.png';
   bool _obscureText = true;
 
-  void showRegisterDialog(BuildContext context,
-      {String title = "Registration Failed", required String message}) {
-    showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: Text(title),
-              content: Text(message),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Close"))
-              ],
-            ));
+  void showRegisterStatus(BuildContext context, {required String message}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 3),
+    ));
   }
 
   void _navigateToLoginPage(BuildContext context) {
@@ -50,7 +42,7 @@ class _RegisterPageState extends State<RegisterPage> {
           .get();
       if (querySnapshot.docs.isNotEmpty) {
         if (context.mounted) {
-          showRegisterDialog(context,
+          showRegisterStatus(context,
               message: "This username is already in use");
         }
         return;
@@ -62,19 +54,17 @@ class _RegisterPageState extends State<RegisterPage> {
 
       db.collection("users").doc(userCredential.user!.uid).set({
         "username": usernameController.text,
-        "e-mail": emailController.text,
-        "password": passwordController.text
       });
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
         if (e.code == 'network-request-failed') {
-          showRegisterDialog(context,
+          showRegisterStatus(context,
               message: "There is no internet connection!");
         } else if (e.code == 'weak-password') {
-          showRegisterDialog(context,
+          showRegisterStatus(context,
               message: "Please enter a stronger password");
         } else if (e.code == 'email-already-in-use') {
-          showRegisterDialog(context, message: "This email is already in use");
+          showRegisterStatus(context, message: "This email is already in use");
         }
       }
       return;
@@ -82,9 +72,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (context.mounted) {
       _navigateToLoginPage(context);
-      showRegisterDialog(context,
-          title: "Registration Successful!",
-          message: "Registration Successful!");
+      showRegisterStatus(context, message: "Registration Successful!");
     }
   }
 

@@ -16,23 +16,16 @@ class _LoginPageState extends State<LoginPage> {
   final String logoPath = 'assets/images/logo.png';
   bool _obscureText = true;
 
-  void showLoginDialog(BuildContext context, {String title="Login Failed", required String message}) {
-    showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: Text(title),
-              content: Text(message),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Close"))
-              ],
-            ));
+  void showLoginStatus(BuildContext context, {required String message}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 3),
+    ));
   }
 
   Future<void> _onPressForgotPassword(BuildContext context) async {
     if (emailAddressController.text.isEmpty) {
-      showLoginDialog(context, title: "Request Successful", message: "Please enter an email.");
+      showLoginStatus(context, message: "Please enter an email.");
     }
 
     try {
@@ -41,14 +34,14 @@ class _LoginPageState extends State<LoginPage> {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-email') {
         if (context.mounted) {
-          showLoginDialog(context, title: "Request Failed", message: "Please enter a valid email.");
+          showLoginStatus(context, message: "Please enter a valid email.");
         }
       }
       return;
     }
 
     if (context.mounted) {
-      showLoginDialog(context, title: "Request Successful", message: "Password reset link sent successfully.");
+      showLoginStatus(context, message: "Password reset link sent successfully.");
     }
   }
 
@@ -78,11 +71,11 @@ class _LoginPageState extends State<LoginPage> {
     } on FirebaseAuthException catch (e) {
       if (context.mounted) {
         if (e.code == 'user-not-found') {
-          showLoginDialog(context, message: 'No user found for that email.');
+          showLoginStatus(context, message: 'No user found for that email.');
         } else if (e.code == 'network-request-failed') {
-          showLoginDialog(context, message: 'There is no internet connection!');
+          showLoginStatus(context, message: 'There is no internet connection!');
         } else if (e.code == 'invalid-credential') {
-          showLoginDialog(context, message: "Wrong e-mail or password provided.");
+          showLoginStatus(context, message: "Wrong e-mail or password provided.");
         }
       }
       return;
