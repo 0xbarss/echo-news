@@ -156,11 +156,6 @@ class _ProfilePageState extends State<ProfilePage> {
         context, MaterialPageRoute(builder: (context) => const LoginPage()));
   }
 
-  void _navigateToNotificationsPage(BuildContext context) {
-    Navigator.push(context,
-        MaterialPageRoute(builder: (context) => const NotificationsPage()));
-  }
-
   void _navigateToSettingsPage(BuildContext context) {
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => const SettingsPage()));
@@ -209,13 +204,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   title: "My Account",
                   leadingIcon: const Icon(Icons.person_outline_outlined),
                   func: _onPressMyAccount),
-              const SizedBox(
-                height: 20,
-              ),
-              ProfilePageCard(
-                  title: "Notifications",
-                  leadingIcon: const Icon(Icons.notifications_none_outlined),
-                  func: () => _navigateToNotificationsPage(context)),
               const SizedBox(
                 height: 20,
               ),
@@ -437,27 +425,6 @@ class _EditProfilePageCardState extends State<EditProfilePageCard> {
               const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
           border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(30)))),
-    );
-  }
-}
-
-class NotificationsPage extends StatefulWidget {
-  const NotificationsPage({super.key});
-
-  @override
-  State<NotificationsPage> createState() => _NotificationsPageState();
-}
-
-class _NotificationsPageState extends State<NotificationsPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0x90E9DACC),
-      ),
-      body: const DecoratedBox(
-          decoration: BoxDecoration(color: Color(0x90E9DACC)),
-          child: Center(child: CircularProgressIndicator())),
     );
   }
 }
