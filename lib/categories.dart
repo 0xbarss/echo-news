@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
-import 'package:news_api_flutter_package/model/article.dart';
 import 'package:intl/intl.dart';
 import 'news.dart';
 
@@ -30,16 +29,18 @@ class CategoriesPage extends StatelessWidget {
   Future<void> _navigateToSelectedCategoryPage(
       BuildContext context, String category) async {
     final NewsAPI newsAPI = NewsAPIProvider.of(context).newsAPI;
-    List<Article> newsData =
+    List<News> newsData =
         await getNewsWithCategory(newsAPI, category: category);
 
     if (context.mounted) {
       Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => CategoryContentPage(
-                  category: toBeginningOfSentenceCase(category),
-                  newsData: newsData)));
+        context,
+        MaterialPageRoute(
+          builder: (context) => CategoryContentPage(
+              category: toBeginningOfSentenceCase(category),
+              newsData: newsData),
+        ),
+      );
     }
   }
 
@@ -56,8 +57,8 @@ class CategoriesPage extends StatelessWidget {
                   leading: Icon(categoryIcons[index]),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   title: Text(toBeginningOfSentenceCase(categories[index])),
-                  onTap: () =>
-                      _navigateToSelectedCategoryPage(context, categories[index]),
+                  onTap: () => _navigateToSelectedCategoryPage(
+                      context, categories[index]),
                 ),
               ),
             );
@@ -68,7 +69,7 @@ class CategoriesPage extends StatelessWidget {
 
 class CategoryContentPage extends StatelessWidget {
   final String category;
-  final List<Article> newsData;
+  final List<News> newsData;
 
   const CategoryContentPage(
       {super.key, required this.category, required this.newsData});
@@ -80,11 +81,14 @@ class CategoryContentPage extends StatelessWidget {
         title: Text(category, style: Theme.of(context).textTheme.headlineSmall),
         flexibleSpace: const FlexibleSpaceBar(
           background: DecoratedBox(
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [Colors.red, Colors.orange],
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft))),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.red, Colors.orange],
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+              ),
+            ),
+          ),
         ),
         centerTitle: true,
       ),

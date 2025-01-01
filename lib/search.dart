@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:intl/intl.dart';
 import 'news.dart';
@@ -41,15 +40,16 @@ class _SearchPageState extends State<SearchPage> {
   Future<void> _navigateToSearchedContentPage(
       BuildContext context, String query) async {
     final NewsAPI newsAPI = NewsAPIProvider.of(context).newsAPI;
-    List<Article> newsData = await getNewsWithSearch(newsAPI, query,
+    List<News> newsData = await getNewsWithSearch(newsAPI, query,
         fromDate: fromDate, toDate: toDate, sortBy: sortBy);
 
     if (context.mounted) {
       Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  SearchContentPage(query: query, newsData: newsData)));
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                SearchContentPage(query: query, newsData: newsData)),
+      );
     }
   }
 
@@ -80,13 +80,9 @@ class _SearchPageState extends State<SearchPage> {
           ),
           Row(
             children: [
-              const SizedBox(
-                width: 16,
-              ),
+              const SizedBox(width: 16),
               const Icon(Icons.sort),
-              const SizedBox(
-                width: 16,
-              ),
+              const SizedBox(width: 16),
               DropdownButton<String>(
                 value: sortBy,
                 items: sortOptions.entries.map((entry) {
@@ -105,20 +101,20 @@ class _SearchPageState extends State<SearchPage> {
               )
             ],
           ),
-          const SizedBox(
-            height: 20,
-          ),
+          const SizedBox(height: 20),
           TextField(
             showCursor: true,
             keyboardType: TextInputType.text,
             decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search_rounded),
-                suffixIcon: Icon(Icons.arrow_back_sharp),
-                label: Text("Enter a keyword"),
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(30)))),
+              prefixIcon: Icon(Icons.search_rounded),
+              suffixIcon: Icon(Icons.arrow_back_sharp),
+              label: Text("Enter a keyword"),
+              contentPadding:
+                  EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(30)),
+              ),
+            ),
             onSubmitted: (value) =>
                 _navigateToSearchedContentPage(context, value),
           )
@@ -130,7 +126,7 @@ class _SearchPageState extends State<SearchPage> {
 
 class SearchContentPage extends StatelessWidget {
   final String query;
-  final List<Article> newsData;
+  final List<News> newsData;
 
   const SearchContentPage(
       {super.key, required this.query, required this.newsData});
@@ -142,11 +138,14 @@ class SearchContentPage extends StatelessWidget {
         title: Text(query, style: Theme.of(context).textTheme.headlineSmall),
         flexibleSpace: const FlexibleSpaceBar(
           background: DecoratedBox(
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [Colors.red, Colors.orange],
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft))),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.red, Colors.orange],
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+              ),
+            ),
+          ),
         ),
         centerTitle: true,
       ),

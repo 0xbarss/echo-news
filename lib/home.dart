@@ -21,7 +21,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _bottomNavigationBarIndex = 0;
-  List<Article> newsData = [];
+  List<News> newsData = [];
   final List<Widget> _pages = [];
   bool _isNewsFetched = false;
   final String logoPath = 'assets/images/logo.png';
@@ -42,13 +42,13 @@ class _HomePageState extends State<HomePage> {
       const Center(child: CircularProgressIndicator()),
       const SearchPage(),
       CategoriesPage(),
-      const BookmarksPage()
+      const BookmarksPage(),
     ]);
   }
 
   Future<void> getNewsData() async {
     NewsAPI newsAPI = NewsAPIProvider.of(context).newsAPI;
-    List<Article> fetchedNewsData = await getNewsWithCategory(newsAPI);
+    List<News> fetchedNewsData = await getNewsWithCategory(newsAPI);
 
     if (context.mounted) {
       setState(() {
@@ -81,32 +81,39 @@ class _HomePageState extends State<HomePage> {
               logoPath,
               height: 30,
             ),
-            Text('Echo News',
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Echo News',
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         flexibleSpace: const FlexibleSpaceBar(
           background: DecoratedBox(
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [Colors.red, Colors.orange],
-                      begin: Alignment.topRight,
-                      end: Alignment.bottomLeft))),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.red, Colors.orange],
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+              ),
+            ),
+          ),
         ),
         centerTitle: true,
         leading: IconButton(
-            onPressed: () => _onPressProfile(context),
-            icon: const Icon(Icons.person_2_sharp)),
+          onPressed: () => _onPressProfile(context),
+          icon: const Icon(Icons.person_2_sharp),
+        ),
         actions: [
           IconButton(
-              onPressed: () => {},
-              icon: const Icon(
-                Icons.settings,
-                color: Colors.black,
-              ))
+            onPressed: () => {},
+            icon: const Icon(
+              Icons.settings,
+              color: Colors.black,
+            ),
+          ),
         ],
       ),
       body: _pages[_bottomNavigationBarIndex],
@@ -147,23 +154,39 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _onPressMyAccount() {
-    Navigator.push(context,
-        MaterialPageRoute(builder: (context) => const EditProfilePage()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const EditProfilePage(),
+      ),
+    );
   }
 
   void _navigateToLoginPage(BuildContext context) {
     Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => const LoginPage()));
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LoginPage(),
+      ),
+    );
   }
 
   void _navigateToSettingsPage(BuildContext context) {
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => const SettingsPage()));
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SettingsPage(),
+      ),
+    );
   }
 
   void _navigateToHelpCenterPage(BuildContext context) {
-    Navigator.push(context,
-        MaterialPageRoute(builder: (context) => const HelpCenterPage()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const HelpCenterPage(),
+      ),
+    );
   }
 
   Future<void> _onPressSignOut(BuildContext context) async {
@@ -197,34 +220,30 @@ class _ProfilePageState extends State<ProfilePage> {
                 radius: 70,
                 child: Image.asset(logoPath),
               ),
-              const SizedBox(
-                height: 40,
-              ),
+              const SizedBox(height: 40),
               ProfilePageCard(
-                  title: "My Account",
-                  leadingIcon: const Icon(Icons.person_outline_outlined),
-                  func: _onPressMyAccount),
-              const SizedBox(
-                height: 20,
+                title: "My Account",
+                leadingIcon: const Icon(Icons.person_outline_outlined),
+                func: _onPressMyAccount,
               ),
+              const SizedBox(height: 20),
               ProfilePageCard(
-                  title: "Settings",
-                  leadingIcon: const Icon(Icons.settings_outlined),
-                  func: () => _navigateToSettingsPage(context)),
-              const SizedBox(
-                height: 20,
+                title: "Settings",
+                leadingIcon: const Icon(Icons.settings_outlined),
+                func: () => _navigateToSettingsPage(context),
               ),
+              const SizedBox(height: 20),
               ProfilePageCard(
-                  title: "Help Center",
-                  leadingIcon: const Icon(Icons.help_outline_outlined),
-                  func: () => _navigateToHelpCenterPage(context)),
-              const SizedBox(
-                height: 20,
+                title: "Help Center",
+                leadingIcon: const Icon(Icons.help_outline_outlined),
+                func: () => _navigateToHelpCenterPage(context),
               ),
+              const SizedBox(height: 20),
               ProfilePageCard(
-                  title: "Sign Out",
-                  leadingIcon: const Icon(Icons.logout),
-                  func: () => _onPressSignOut(context)),
+                title: "Sign Out",
+                leadingIcon: const Icon(Icons.logout),
+                func: () => _onPressSignOut(context),
+              ),
             ],
           ),
         ),
@@ -270,7 +289,8 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final User? user = FirebaseAuth.instance.currentUser;
   final FirebaseFirestore db = FirebaseFirestore.instance;
-  final TextEditingController usernameController = TextEditingController(text: "");
+  final TextEditingController usernameController =
+      TextEditingController(text: "");
   final TextEditingController emailController = TextEditingController(text: "");
   bool _isNotCompleted = true;
   final String logoPath = 'assets/images/logo.png';
@@ -322,7 +342,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
           }
           return;
         }
-        db.collection("users").doc(user!.uid).update({"username": usernameController.text});
+        db
+            .collection("users")
+            .doc(user!.uid)
+            .update({"username": usernameController.text});
         if (context.mounted) {
           showUpdateStatus(context, message: "Username changed successfully");
         }
@@ -340,9 +363,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     if (_isNotCompleted) {
       return const Scaffold(
-          body: DecoratedBox(
-              decoration: BoxDecoration(color: Color(0x90E9DACC)),
-              child: Center(child: CircularProgressIndicator())));
+        body: DecoratedBox(
+          decoration: BoxDecoration(color: Color(0x90E9DACC)),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
     }
     return Scaffold(
       appBar: AppBar(
@@ -366,27 +391,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   radius: 70,
                   child: Image.asset(logoPath),
                 ),
-                const SizedBox(
-                  height: 40,
-                ),
+                const SizedBox(height: 40),
                 EditProfilePageCard(
                   title: "username",
                   prefixIcon: const Icon(Icons.person_2_sharp),
                   controller: usernameController,
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
                 EditProfilePageCard(
                   title: "e-mail",
                   prefixIcon: const Icon(Icons.email),
                   controller: emailController,
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
                 ElevatedButton(
-                    onPressed: () => updateData(context), child: const Text("Update"))
+                  onPressed: () => updateData(context),
+                  child: const Text("Update"),
+                )
               ],
             ),
           )),
@@ -421,8 +442,10 @@ class _EditProfilePageCardState extends State<EditProfilePageCard> {
           prefixIcon: widget.prefixIcon,
           suffixIcon: const Icon(Icons.edit),
           labelText: toBeginningOfSentenceCase(widget.title),
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 15,
+            horizontal: 15,
+          ),
           border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(30)))),
     );
@@ -442,8 +465,11 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(backgroundColor: const Color(0x90E9DACC)),
       body: const DecoratedBox(
-          decoration: BoxDecoration(color: Color(0x90E9DACC)),
-          child: Center(child: CircularProgressIndicator())),
+        decoration: BoxDecoration(color: Color(0x90E9DACC)),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
     );
   }
 }
@@ -461,8 +487,11 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
     return Scaffold(
       appBar: AppBar(backgroundColor: const Color(0x90E9DACC)),
       body: const DecoratedBox(
-          decoration: BoxDecoration(color: Color(0x90E9DACC)),
-          child: Center(child: CircularProgressIndicator())),
+        decoration: BoxDecoration(color: Color(0x90E9DACC)),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
     );
   }
 }
