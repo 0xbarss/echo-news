@@ -562,7 +562,6 @@ class _SettingsPageState extends State<SettingsPage> {
     if (context.mounted) {
       _navigateToLoginPage(context);
     }
-
   }
 
   @override
@@ -606,21 +605,93 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-class HelpCenterPage extends StatefulWidget {
+class HelpCenterPage extends StatelessWidget {
   const HelpCenterPage({super.key});
 
-  @override
-  State<HelpCenterPage> createState() => _HelpCenterPageState();
-}
+  Widget createTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+      ),
+    );
+  }
 
-class _HelpCenterPageState extends State<HelpCenterPage> {
+  Widget createItem(String question, String answer) {
+    return ListTile(
+      title: Text(
+        question,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(answer),
+      trailing: const Icon(Icons.expand_more),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: const Center(
-        child: CircularProgressIndicator(),
+        appBar: AppBar(
+          title: const Text("Help Center"),
+          centerTitle: true,
+        ),
+        body: ListView(
+          children: [
+            createTitle("Frequently Asked Questions"),
+            const HelpCenterItem(
+                question: "How do I reset my password?",
+                answer:
+                    'To reset your password, go to the login screen and tap on "Forgot Password".'),
+            const HelpCenterItem(
+                question: "How do I update my profile?",
+                answer:
+                    'You can update your profile from the "Settings" section.'),
+            const SizedBox(height: 20),
+            createTitle("Troubleshooting"),
+            const HelpCenterItem(
+                question: "App is not loading?",
+                answer:
+                    "Try restarting the app or check your internet connection."),
+            const HelpCenterItem(
+                question: "The app crashes on launch?",
+                answer: "Please clear the app cache or reinstall the app."),
+            const SizedBox(height: 20),
+            createTitle("Contact Us"),
+            const HelpCenterItem(
+                question: "Need further assistance?",
+                answer: "Email us at baris.ozdemir@std.izmirekonomi.edu.tr"),
+          ],
+        ));
+  }
+}
+
+class HelpCenterItem extends StatefulWidget {
+  final String question;
+  final String answer;
+
+  const HelpCenterItem(
+      {super.key, required this.question, required this.answer});
+
+  @override
+  State<HelpCenterItem> createState() => _HelpCenterItemState();
+}
+
+class _HelpCenterItemState extends State<HelpCenterItem> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(
+        widget.question,
+        style: const TextStyle(fontStyle: FontStyle.italic),
       ),
+      subtitle: _isExpanded ? Text(widget.answer) : null,
+      trailing: Icon(_isExpanded ? Icons.expand_less: Icons.expand_more),
+      onTap: () => setState(() {
+        _isExpanded = !_isExpanded;
+      }),
     );
   }
 }
