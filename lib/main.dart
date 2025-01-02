@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'news.dart';
 import 'login.dart';
+import 'theme_provider.dart';
+import 'news_api_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,19 +15,33 @@ Future<void> main() async {
       child: const MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeData _currentTheme = ThemeData.light();
+
+  void _updateTheme(ThemeData newTheme) {
+    setState(() {
+      _currentTheme = newTheme;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Echo News',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
-        useMaterial3: true,
+    return ThemeProvider(
+      themeData: _currentTheme,
+      updateTheme: _updateTheme,
+      child: MaterialApp(
+        title: 'Echo News',
+        theme: _currentTheme,
+        home: const LoginPage(),
+        debugShowCheckedModeBanner: false,
       ),
-      home: const LoginPage(),
-      debugShowCheckedModeBanner: false,
     );
   }
 }

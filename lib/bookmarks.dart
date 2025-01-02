@@ -13,8 +13,14 @@ class BookmarksPage extends StatefulWidget {
 class _BookmarksPageState extends State<BookmarksPage> {
   final User? user = FirebaseAuth.instance.currentUser;
   final FirebaseFirestore db = FirebaseFirestore.instance;
-  final List<News> bookmarks = [];
-  bool bookmarksFetched = false;
+  final List<News> _bookmarks = [];
+  bool _bookmarksFetched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchBookmarks();
+  }
 
   Future<void> fetchBookmarks() async {
     QuerySnapshot querySnapshot = await db
@@ -28,40 +34,28 @@ class _BookmarksPageState extends State<BookmarksPage> {
       fetchedBookmarks.add(News.fromJson(data));
     }
     setState(() {
-      bookmarks.clear();
-      bookmarks.addAll(fetchedBookmarks);
-      bookmarksFetched = true;
+      _bookmarks.clear();
+      _bookmarks.addAll(fetchedBookmarks);
+      _bookmarksFetched = true;
     });
   }
 
   @override
-  void initState() {
-    super.initState();
-    fetchBookmarks();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (!bookmarksFetched) {
+    if (!_bookmarksFetched) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (bookmarks.isEmpty) {
-      return DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0x90E9DACC)),
-        child: RefreshIndicator(
-          onRefresh: fetchBookmarks,
-          child: const Center(
-            child: Text("No bookmarks found!"),
-          ),
+    if (_bookmarks.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: fetchBookmarks,
+        child: const Center(
+          child: Text("No bookmarks found!"),
         ),
       );
     }
     return RefreshIndicator(
       onRefresh: fetchBookmarks,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0x90E9DACC)),
-        child: NewsPage(newsData: bookmarks),
-      ),
+      child: NewsPage(newsData: _bookmarks),
     );
   }
 }

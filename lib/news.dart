@@ -56,28 +56,6 @@ Future<List<News>> getNewsWithCategory(NewsAPI newsAPI,
   return [];
 }
 
-class NewsAPIProvider extends InheritedWidget {
-  final NewsAPI newsAPI;
-
-  const NewsAPIProvider(
-    this.newsAPI, {
-    super.key,
-    required super.child,
-  });
-
-  static NewsAPIProvider of(BuildContext context) {
-    final NewsAPIProvider? result =
-        context.dependOnInheritedWidgetOfExactType<NewsAPIProvider>();
-    assert(result != null, 'No NewsAPIProvider found in context');
-    return result!;
-  }
-
-  @override
-  bool updateShouldNotify(NewsAPIProvider oldWidget) {
-    return newsAPI != oldWidget.newsAPI;
-  }
-}
-
 class News {
   final String author,
       title,
@@ -129,7 +107,7 @@ class News {
 
 class NewsCard extends StatelessWidget {
   final News news;
-  final String placeHolderImage = 'assets/images/news-placeholder.jpg';
+  final String _placeHolderImage = 'assets/images/news-placeholder.jpg';
 
   const NewsCard({super.key, required this.news});
 
@@ -149,7 +127,7 @@ class NewsCard extends StatelessWidget {
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Image(
-                    image: AssetImage(placeHolderImage), fit: BoxFit.cover);
+                    image: AssetImage(_placeHolderImage), fit: BoxFit.cover);
               },
             ),
           ),
@@ -176,18 +154,24 @@ class NewsContentPage extends StatefulWidget {
 }
 
 class _NewsContentPageState extends State<NewsContentPage> {
-  bool savedToBookmarks = false;
   final User? user = FirebaseAuth.instance.currentUser;
   final FirebaseFirestore db = FirebaseFirestore.instance;
-  final placeHolderImage = 'assets/images/news-placeholder.jpg';
+  final _placeHolderImage = 'assets/images/news-placeholder.jpg';
+  bool _savedToBookmarks = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBookmarkStatus();
+  }
 
   Future<void> _shareLink() async => await Share.share(
         widget.news.url,
         subject: widget.news.title,
       );
 
-  Future<void> manageBookmark() async {
-    if (!savedToBookmarks) {
+  Future<void> _manageBookmark() async {
+    if (!_savedToBookmarks) {
       final String bookmarkID = widget.news.title;
       final Map<String, String> article = {
         "author": widget.news.author,
@@ -215,13 +199,13 @@ class _NewsContentPageState extends State<NewsContentPage> {
   }
 
   void _onPressBookmark() {
-    manageBookmark();
+    _manageBookmark();
     setState(() {
-      savedToBookmarks = !savedToBookmarks;
+      _savedToBookmarks = !_savedToBookmarks;
     });
   }
 
-  Future<void> fetchBookmarkStatus() async {
+  Future<void> _fetchBookmarkStatus() async {
     DocumentSnapshot documentSnapshot = await db
         .collection("users")
         .doc(user!.uid)
@@ -229,14 +213,8 @@ class _NewsContentPageState extends State<NewsContentPage> {
         .doc(widget.news.title)
         .get();
     setState(() {
-      savedToBookmarks = documentSnapshot.exists;
+      _savedToBookmarks = documentSnapshot.exists;
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchBookmarkStatus();
   }
 
   @override
@@ -252,7 +230,7 @@ class _NewsContentPageState extends State<NewsContentPage> {
             onPressed: _onPressBookmark,
             iconSize: 32,
             icon:
-                Icon(savedToBookmarks ? Icons.bookmark : Icons.bookmark_border),
+                Icon(_savedToBookmarks ? Icons.bookmark : Icons.bookmark_border),
             color: Colors.grey.shade400,
           )
         ],
@@ -270,7 +248,7 @@ class _NewsContentPageState extends State<NewsContentPage> {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Image(
-                        image: AssetImage(placeHolderImage), fit: BoxFit.cover);
+                        image: AssetImage(_placeHolderImage), fit: BoxFit.cover);
                   },
                 ),
               ),
@@ -346,7 +324,6 @@ class NewsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0x90E9DACC),
       child: Center(
         child: Column(
           children: [

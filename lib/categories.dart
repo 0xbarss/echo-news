@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:intl/intl.dart';
 import 'news.dart';
+import 'news_api_provider.dart';
 
-class CategoriesPage extends StatelessWidget {
-  CategoriesPage({super.key});
+class CategoriesPage extends StatefulWidget {
+  const CategoriesPage({super.key});
 
-  final List<String> categories = [
+  @override
+  State<CategoriesPage> createState() => _CategoriesPageState();
+}
+
+class _CategoriesPageState extends State<CategoriesPage> {
+  final List<String> _categories = [
     'general',
     'business',
     'entertainment',
@@ -15,8 +21,7 @@ class CategoriesPage extends StatelessWidget {
     'sports',
     'technology'
   ];
-
-  final List<IconData> categoryIcons = [
+  final List<IconData> _categoryIcons = [
     Icons.newspaper,
     Icons.business,
     Icons.tv,
@@ -46,24 +51,21 @@ class CategoriesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Color(0x90E9DACC)),
-      child: ListView.builder(
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            return InkWell(
-              child: Card(
-                child: ListTile(
-                  leading: Icon(categoryIcons[index]),
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  title: Text(toBeginningOfSentenceCase(categories[index])),
-                  onTap: () => _navigateToSelectedCategoryPage(
-                      context, categories[index]),
-                ),
+    return ListView.builder(
+        itemCount: _categories.length,
+        itemBuilder: (context, index) {
+          return InkWell(
+            child: Card(
+              child: ListTile(
+                leading: Icon(_categoryIcons[index]),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                title: Text(toBeginningOfSentenceCase(_categories[index])),
+                onTap: () => _navigateToSelectedCategoryPage(
+                    context, _categories[index]),
               ),
-            );
-          }),
-    );
+            ),
+          );
+        });
   }
 }
 

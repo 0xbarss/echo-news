@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:news_api_flutter_package/model/article.dart';
 import 'package:news_api_flutter_package/news_api_flutter_package.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,11 +8,11 @@ import 'search.dart';
 import 'categories.dart';
 import 'bookmarks.dart';
 import 'login.dart';
+import 'theme_provider.dart';
+import 'news_api_provider.dart';
 
 class HomePage extends StatefulWidget {
-  final List<Article> newsData;
-
-  const HomePage({super.key, required this.newsData});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -21,19 +20,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _bottomNavigationBarIndex = 0;
-  List<News> newsData = [];
+  final List<News> _newsData = [];
   final List<Widget> _pages = [];
-  bool _isNewsFetched = false;
-  final String logoPath = 'assets/images/logo.png';
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isNewsFetched) {
-      getNewsData();
-      _isNewsFetched = true;
-    }
-  }
+  final String _logoPath = 'assets/images/logo.png';
 
   @override
   void initState() {
@@ -41,19 +30,36 @@ class _HomePageState extends State<HomePage> {
     _pages.addAll([
       const Center(child: CircularProgressIndicator()),
       const SearchPage(),
-      CategoriesPage(),
+      const CategoriesPage(),
       const BookmarksPage(),
     ]);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _getInitialSettings(context);
+      _getNewsData(context);
+    });
   }
 
-  Future<void> getNewsData() async {
+  Future<void> _getInitialSettings(BuildContext context) async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+    final DocumentSnapshot documentSnapshot =
+        await db.collection("users").doc(user!.uid).get();
+    final data = documentSnapshot.data() as Map<String, dynamic>;
+
+    if (context.mounted) {
+      ThemeProvider.of(context).updateTheme(
+          data["isDarkMode"] ? ThemeData.dark() : ThemeData.light());
+    }
+  }
+
+  Future<void> _getNewsData(BuildContext context) async {
     NewsAPI newsAPI = NewsAPIProvider.of(context).newsAPI;
     List<News> fetchedNewsData = await getNewsWithCategory(newsAPI);
 
     if (context.mounted) {
       setState(() {
-        newsData.addAll(fetchedNewsData);
-        _pages[0] = NewsPage(newsData: newsData);
+        _newsData.addAll(fetchedNewsData);
+        _pages[0] = NewsPage(newsData: _newsData);
       });
     }
   }
@@ -78,7 +84,7 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              logoPath,
+              _logoPath,
               height: 30,
             ),
             Text(
@@ -104,13 +110,16 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         leading: IconButton(
           onPressed: () => _onPressProfile(context),
-          icon: const Icon(Icons.person_2_sharp),
+          icon: const Icon(
+            Icons.person_2_sharp,
+            color: Colors.black,
+          ),
         ),
         actions: [
           IconButton(
             onPressed: () => {},
             icon: const Icon(
-              Icons.settings,
+              Icons.message,
               color: Colors.black,
             ),
           ),
@@ -146,12 +155,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final String logoPath = 'assets/images/logo.png';
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  final String _logoPath = 'assets/images/logo.png';
 
   void _onPressMyAccount() {
     Navigator.push(
@@ -200,7 +204,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0x90E9DACC),
         title: Text(
           "Profile",
           style: Theme.of(context)
@@ -210,42 +213,39 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         centerTitle: true,
       ),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0x90E9DACC)),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              CircleAvatar(
-                radius: 70,
-                child: Image.asset(logoPath),
-              ),
-              const SizedBox(height: 40),
-              ProfilePageCard(
-                title: "My Account",
-                leadingIcon: const Icon(Icons.person_outline_outlined),
-                func: _onPressMyAccount,
-              ),
-              const SizedBox(height: 20),
-              ProfilePageCard(
-                title: "Settings",
-                leadingIcon: const Icon(Icons.settings_outlined),
-                func: () => _navigateToSettingsPage(context),
-              ),
-              const SizedBox(height: 20),
-              ProfilePageCard(
-                title: "Help Center",
-                leadingIcon: const Icon(Icons.help_outline_outlined),
-                func: () => _navigateToHelpCenterPage(context),
-              ),
-              const SizedBox(height: 20),
-              ProfilePageCard(
-                title: "Sign Out",
-                leadingIcon: const Icon(Icons.logout),
-                func: () => _onPressSignOut(context),
-              ),
-            ],
-          ),
+      body: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 70,
+              child: Image.asset(_logoPath),
+            ),
+            const SizedBox(height: 40),
+            ProfilePageCard(
+              title: "My Account",
+              leadingIcon: const Icon(Icons.person_outline_outlined),
+              func: _onPressMyAccount,
+            ),
+            const SizedBox(height: 20),
+            ProfilePageCard(
+              title: "Settings",
+              leadingIcon: const Icon(Icons.settings_outlined),
+              func: () => _navigateToSettingsPage(context),
+            ),
+            const SizedBox(height: 20),
+            ProfilePageCard(
+              title: "Help Center",
+              leadingIcon: const Icon(Icons.help_outline_outlined),
+              func: () => _navigateToHelpCenterPage(context),
+            ),
+            const SizedBox(height: 20),
+            ProfilePageCard(
+              title: "Sign Out",
+              leadingIcon: const Icon(Icons.logout),
+              func: () => _onPressSignOut(context),
+            ),
+          ],
         ),
       ),
     );
@@ -289,55 +289,49 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final User? user = FirebaseAuth.instance.currentUser;
   final FirebaseFirestore db = FirebaseFirestore.instance;
-  final TextEditingController usernameController =
+  final TextEditingController _usernameController =
       TextEditingController(text: "");
-  final TextEditingController emailController = TextEditingController(text: "");
+  final TextEditingController _emailController =
+      TextEditingController(text: "");
+  final String _logoPath = 'assets/images/logo.png';
   bool _isNotCompleted = true;
-  final String logoPath = 'assets/images/logo.png';
-
-  Future<void> getProfileInformation() async {
-    final DocumentSnapshot userDoc =
-        await db.collection("users").doc(user?.uid).get();
-    setState(() {
-      usernameController.text = userDoc["username"];
-      emailController.text = user!.email!;
-    });
-    _isNotCompleted = false;
-  }
 
   @override
   void initState() {
     super.initState();
-    getProfileInformation();
+    _getProfileInformation();
   }
 
-  @override
-  void dispose() {
-    usernameController.dispose();
-    emailController.dispose();
-    super.dispose();
+  Future<void> _getProfileInformation() async {
+    final DocumentSnapshot userDoc =
+        await db.collection("users").doc(user?.uid).get();
+    setState(() {
+      _usernameController.text = userDoc["username"];
+      _emailController.text = user!.email!;
+    });
+    _isNotCompleted = false;
   }
 
-  void showUpdateStatus(BuildContext context, {required String message}) {
+  void _showUpdateStatus(BuildContext context, {required String message}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(message),
       duration: const Duration(seconds: 3),
     ));
   }
 
-  Future<void> updateData(BuildContext context) async {
+  Future<void> _updateData(BuildContext context) async {
     try {
-      if (emailController.text.isNotEmpty) {
-        await user?.verifyBeforeUpdateEmail(emailController.text);
+      if (_emailController.text.isNotEmpty) {
+        await user?.verifyBeforeUpdateEmail(_emailController.text);
       }
-      if (usernameController.text.isNotEmpty) {
+      if (_usernameController.text.isNotEmpty) {
         QuerySnapshot querySnapshot = await db
             .collection("users")
-            .where("username", isEqualTo: usernameController.text)
+            .where("username", isEqualTo: _usernameController.text)
             .get();
         if (querySnapshot.docs.isNotEmpty) {
           if (context.mounted) {
-            showUpdateStatus(context,
+            _showUpdateStatus(context,
                 message: "This username is already in use");
           }
           return;
@@ -345,33 +339,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
         db
             .collection("users")
             .doc(user!.uid)
-            .update({"username": usernameController.text});
+            .update({"username": _usernameController.text});
         if (context.mounted) {
-          showUpdateStatus(context, message: "Username changed successfully");
+          _showUpdateStatus(context, message: "Username changed successfully");
         }
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         if (context.mounted) {
-          showUpdateStatus(context, message: "This email is already in use");
+          _showUpdateStatus(context, message: "This email is already in use");
         }
       }
     }
   }
 
   @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (_isNotCompleted) {
       return const Scaffold(
-        body: DecoratedBox(
-          decoration: BoxDecoration(color: Color(0x90E9DACC)),
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0x90E9DACC),
         centerTitle: true,
         title: Text(
           "Edit Profile",
@@ -381,36 +378,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ?.copyWith(fontWeight: FontWeight.bold),
         ),
       ),
-      body: DecoratedBox(
-          decoration: const BoxDecoration(color: Color(0x90E9DACC)),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 70,
-                  child: Image.asset(logoPath),
-                ),
-                const SizedBox(height: 40),
-                EditProfilePageCard(
-                  title: "username",
-                  prefixIcon: const Icon(Icons.person_2_sharp),
-                  controller: usernameController,
-                ),
-                const SizedBox(height: 20),
-                EditProfilePageCard(
-                  title: "e-mail",
-                  prefixIcon: const Icon(Icons.email),
-                  controller: emailController,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () => updateData(context),
-                  child: const Text("Update"),
-                )
-              ],
+      body: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 70,
+              child: Image.asset(_logoPath),
             ),
-          )),
+            const SizedBox(height: 40),
+            EditProfilePageCard(
+              title: "username",
+              prefixIcon: const Icon(Icons.person_2_sharp),
+              controller: _usernameController,
+            ),
+            const SizedBox(height: 20),
+            EditProfilePageCard(
+              title: "e-mail",
+              prefixIcon: const Icon(Icons.email),
+              controller: _emailController,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => _updateData(context),
+              child: const Text("Update"),
+            )
+          ],
+        ),
+      ),
     );
   }
 }
@@ -460,14 +455,151 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  final User? user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore db = FirebaseFirestore.instance;
+  bool _isDarkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _getInitialSettings(context));
+  }
+
+  void _getInitialSettings(BuildContext context) {
+    setState(() {
+      _isDarkMode = ThemeProvider.of(context).themeData == ThemeData.dark();
+    });
+  }
+
+  Future<void> _onPressDarkMode(bool value) async {
+    ThemeProvider.of(context)
+        .updateTheme(_isDarkMode ? ThemeData.light() : ThemeData.dark());
+    await db.collection("users").doc(user!.uid).update({"isDarkMode": value});
+    setState(() {
+      _isDarkMode = value;
+    });
+  }
+
+  Future<void> _removeBookmarks() async {
+    QuerySnapshot querySnapshot = await db
+        .collection("users")
+        .doc(user!.uid)
+        .collection("bookmarks")
+        .get();
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
+    }
+  }
+
+  Future<void> _onPressRemoveBookmarks(BuildContext context) async {
+    bool? isConfirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Remove Bookmarks"),
+            content:
+                const Text("Are you sure you want to remove all bookmarks?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("No"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Yes"),
+              ),
+            ],
+          );
+        });
+
+    if (isConfirmed == null || !isConfirmed) return;
+    _removeBookmarks();
+  }
+
+  void _navigateToLoginPage(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+        (Route<dynamic> route) => false);
+  }
+
+  Future<void> _deleteAccount() async {
+    await db.collection("users").doc(user!.uid).delete();
+    try {
+      await user?.delete();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        // Do nothing
+      }
+    }
+  }
+
+  Future<void> _onPressDeleteAccount(BuildContext context) async {
+    bool? isConfirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Delete Account"),
+            content:
+                const Text("Are you sure you want to delete your account?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("No"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Yes"),
+              ),
+            ],
+          );
+        });
+
+    if (isConfirmed == null || !isConfirmed) return;
+
+    _deleteAccount();
+    if (context.mounted) {
+      _navigateToLoginPage(context);
+    }
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: const Color(0x90E9DACC)),
-      body: const DecoratedBox(
-        decoration: BoxDecoration(color: Color(0x90E9DACC)),
-        child: Center(
-          child: CircularProgressIndicator(),
+      appBar: AppBar(
+        title: const Text("Settings"),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.dark_mode),
+                title: const Text("Dark Mode"),
+                trailing: Switch(
+                    value: _isDarkMode,
+                    onChanged: (value) => _onPressDarkMode(value)),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.bookmarks),
+                title: const Text("Remove Bookmarks"),
+                onTap: () => _onPressRemoveBookmarks(context),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.delete_forever),
+                title: const Text("Remove Account"),
+                onTap: () => _onPressDeleteAccount(context),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -485,12 +617,9 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: const Color(0x90E9DACC)),
-      body: const DecoratedBox(
-        decoration: BoxDecoration(color: Color(0x90E9DACC)),
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+      appBar: AppBar(),
+      body: const Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
