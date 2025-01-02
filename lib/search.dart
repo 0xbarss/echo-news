@@ -21,7 +21,7 @@ class _SearchPageState extends State<SearchPage> {
     'publishedAt': 'Published At'
   };
 
-  Future<void> pickDate(BuildContext context, bool isFrom) async {
+  Future<void> _pickDate(BuildContext context, bool isFrom) async {
     final DateTime? pickedDate = await showDatePicker(
         context: context,
         initialDate: DateTime.now(),
@@ -66,7 +66,7 @@ class _SearchPageState extends State<SearchPage> {
               ? "Select a date"
               : DateFormat('yyyy-MM-dd').format(_fromDate!)),
           trailing: const Icon(Icons.arrow_forward_ios),
-          onTap: () => pickDate(context, true),
+          onTap: () => _pickDate(context, true),
         ),
         ListTile(
           leading: const Icon(Icons.date_range),
@@ -75,7 +75,7 @@ class _SearchPageState extends State<SearchPage> {
               ? "Select a date"
               : DateFormat('yyyy-MM-dd').format(_toDate!)),
           trailing: const Icon(Icons.arrow_forward_ios),
-          onTap: () => pickDate(context, false),
+          onTap: () => _pickDate(context, false),
         ),
         Row(
           children: [
@@ -108,8 +108,7 @@ class _SearchPageState extends State<SearchPage> {
             prefixIcon: Icon(Icons.search_rounded),
             suffixIcon: Icon(Icons.arrow_back_sharp),
             label: Text("Enter a keyword"),
-            contentPadding:
-                EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+            contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(30)),
             ),

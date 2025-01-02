@@ -11,21 +11,21 @@ class BookmarksPage extends StatefulWidget {
 }
 
 class _BookmarksPageState extends State<BookmarksPage> {
-  final User? user = FirebaseAuth.instance.currentUser;
-  final FirebaseFirestore db = FirebaseFirestore.instance;
+  final User? _user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
   final List<News> _bookmarks = [];
   bool _bookmarksFetched = false;
 
   @override
   void initState() {
     super.initState();
-    fetchBookmarks();
+    _fetchBookmarks();
   }
 
-  Future<void> fetchBookmarks() async {
-    QuerySnapshot querySnapshot = await db
+  Future<void> _fetchBookmarks() async {
+    QuerySnapshot querySnapshot = await _db
         .collection("users")
-        .doc(user!.uid)
+        .doc(_user!.uid)
         .collection("bookmarks")
         .get();
     List<News> fetchedBookmarks = [];
@@ -47,14 +47,14 @@ class _BookmarksPageState extends State<BookmarksPage> {
     }
     if (_bookmarks.isEmpty) {
       return RefreshIndicator(
-        onRefresh: fetchBookmarks,
+        onRefresh: _fetchBookmarks,
         child: const Center(
           child: Text("No bookmarks found!"),
         ),
       );
     }
     return RefreshIndicator(
-      onRefresh: fetchBookmarks,
+      onRefresh: _fetchBookmarks,
       child: NewsPage(newsData: _bookmarks),
     );
   }

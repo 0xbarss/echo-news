@@ -76,6 +76,12 @@ class _HomePageState extends State<HomePage> {
     }));
   }
 
+  void _onPressMessage(BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return const MessagesPage();
+    }));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,7 +123,7 @@ class _HomePageState extends State<HomePage> {
         ),
         actions: [
           IconButton(
-            onPressed: () => {},
+            onPressed: () => _onPressMessage(context),
             icon: const Icon(
               Icons.message,
               color: Colors.black,
@@ -287,8 +293,8 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final User? user = FirebaseAuth.instance.currentUser;
-  final FirebaseFirestore db = FirebaseFirestore.instance;
+  final User? _user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
   final TextEditingController _usernameController =
       TextEditingController(text: "");
   final TextEditingController _emailController =
@@ -304,10 +310,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Future<void> _getProfileInformation() async {
     final DocumentSnapshot userDoc =
-        await db.collection("users").doc(user?.uid).get();
+        await _db.collection("users").doc(_user?.uid).get();
     setState(() {
       _usernameController.text = userDoc["username"];
-      _emailController.text = user!.email!;
+      _emailController.text = _user!.email!;
     });
     _isNotCompleted = false;
   }
@@ -322,10 +328,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _updateData(BuildContext context) async {
     try {
       if (_emailController.text.isNotEmpty) {
-        await user?.verifyBeforeUpdateEmail(_emailController.text);
+        await _user?.verifyBeforeUpdateEmail(_emailController.text);
       }
       if (_usernameController.text.isNotEmpty) {
-        QuerySnapshot querySnapshot = await db
+        QuerySnapshot querySnapshot = await _db
             .collection("users")
             .where("username", isEqualTo: _usernameController.text)
             .get();
@@ -336,9 +342,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           }
           return;
         }
-        db
+        _db
             .collection("users")
-            .doc(user!.uid)
+            .doc(_user!.uid)
             .update({"username": _usernameController.text});
         if (context.mounted) {
           _showUpdateStatus(context, message: "Username changed successfully");
@@ -428,6 +434,12 @@ class EditProfilePageCard extends StatefulWidget {
 
 class _EditProfilePageCardState extends State<EditProfilePageCard> {
   @override
+  void dispose() {
+    widget.controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextField(
       showCursor: true,
@@ -455,8 +467,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final User? user = FirebaseAuth.instance.currentUser;
-  final FirebaseFirestore db = FirebaseFirestore.instance;
+  final User? _user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
   bool _isDarkMode = false;
 
   @override
@@ -475,16 +487,16 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _onPressDarkMode(bool value) async {
     ThemeProvider.of(context)
         .updateTheme(_isDarkMode ? ThemeData.light() : ThemeData.dark());
-    await db.collection("users").doc(user!.uid).update({"isDarkMode": value});
+    await _db.collection("users").doc(_user!.uid).update({"isDarkMode": value});
     setState(() {
       _isDarkMode = value;
     });
   }
 
   Future<void> _removeBookmarks() async {
-    QuerySnapshot querySnapshot = await db
+    QuerySnapshot querySnapshot = await _db
         .collection("users")
-        .doc(user!.uid)
+        .doc(_user!.uid)
         .collection("bookmarks")
         .get();
     for (var doc in querySnapshot.docs) {
@@ -525,9 +537,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _deleteAccount() async {
-    await db.collection("users").doc(user!.uid).delete();
+    await _db.collection("users").doc(_user!.uid).delete();
     try {
-      await user?.delete();
+      await _user.delete();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {
         // Do nothing
@@ -608,24 +620,13 @@ class _SettingsPageState extends State<SettingsPage> {
 class HelpCenterPage extends StatelessWidget {
   const HelpCenterPage({super.key});
 
-  Widget createTitle(String title) {
+  Widget _createTitle(String title) {
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: Text(
         title,
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
       ),
-    );
-  }
-
-  Widget createItem(String question, String answer) {
-    return ListTile(
-      title: Text(
-        question,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text(answer),
-      trailing: const Icon(Icons.expand_more),
     );
   }
 
@@ -638,7 +639,7 @@ class HelpCenterPage extends StatelessWidget {
         ),
         body: ListView(
           children: [
-            createTitle("Frequently Asked Questions"),
+            _createTitle("Frequently Asked Questions"),
             const HelpCenterItem(
                 question: "How do I reset my password?",
                 answer:
@@ -648,7 +649,7 @@ class HelpCenterPage extends StatelessWidget {
                 answer:
                     'You can update your profile from the "Settings" section.'),
             const SizedBox(height: 20),
-            createTitle("Troubleshooting"),
+            _createTitle("Troubleshooting"),
             const HelpCenterItem(
                 question: "App is not loading?",
                 answer:
@@ -657,7 +658,7 @@ class HelpCenterPage extends StatelessWidget {
                 question: "The app crashes on launch?",
                 answer: "Please clear the app cache or reinstall the app."),
             const SizedBox(height: 20),
-            createTitle("Contact Us"),
+            _createTitle("Contact Us"),
             const HelpCenterItem(
                 question: "Need further assistance?",
                 answer: "Email us at baris.ozdemir@std.izmirekonomi.edu.tr"),
@@ -688,10 +689,392 @@ class _HelpCenterItemState extends State<HelpCenterItem> {
         style: const TextStyle(fontStyle: FontStyle.italic),
       ),
       subtitle: _isExpanded ? Text(widget.answer) : null,
-      trailing: Icon(_isExpanded ? Icons.expand_less: Icons.expand_more),
+      trailing: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
       onTap: () => setState(() {
         _isExpanded = !_isExpanded;
       }),
+    );
+  }
+}
+
+class MessagesPage extends StatefulWidget {
+  const MessagesPage({super.key});
+
+  @override
+  State<MessagesPage> createState() => _MessagesPageState();
+}
+
+class _MessagesPageState extends State<MessagesPage> {
+  final User? _user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final List<String> _followedPeople = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _getFollowedPeople();
+  }
+
+  void _onPressAddPerson() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => AddPersonPage(
+                followedPeople: _followedPeople, managePerson: _managePerson)));
+  }
+
+  Future<void> _managePerson(String person) async {
+    if (_followedPeople.contains(person)) {
+      QuerySnapshot querySnapshot = await _db
+          .collection("users")
+          .doc(_user!.uid)
+          .collection("following")
+          .where("username", isEqualTo: person)
+          .get();
+      await querySnapshot.docs.first.reference.delete();
+      setState(() {
+        _followedPeople.remove(person);
+      });
+    } else {
+      await _db
+          .collection("users")
+          .doc(_user!.uid)
+          .collection("following")
+          .add({"username": person});
+      setState(() {
+        _followedPeople.add(person);
+      });
+    }
+  }
+
+  Future<void> _getFollowedPeople() async {
+    QuerySnapshot querySnapshot = await _db
+        .collection("users")
+        .doc(_user!.uid)
+        .collection("following")
+        .get();
+    List<String> fetchedFollowedPeople = [];
+    for (var document in querySnapshot.docs) {
+      var data = document.data() as Map<String, dynamic>;
+      fetchedFollowedPeople.add(data["username"]);
+    }
+    setState(() {
+      _followedPeople.addAll(fetchedFollowedPeople);
+    });
+  }
+
+  void _onPressMessage(String username) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => MessageDetailPage(username: username)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Messages"),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: _onPressAddPerson,
+            icon: const Icon(Icons.person_add),
+          )
+        ],
+      ),
+      body: ListView.builder(
+          itemCount: _followedPeople.length,
+          itemBuilder: (BuildContext context, int index) {
+            final String username = _followedPeople[index];
+            return Card(
+              child: ListTile(
+                title: Text(username),
+                leading: const Icon(Icons.person),
+                trailing: IconButton(
+                  icon: const Icon(Icons.message_sharp),
+                  onPressed: () => _onPressMessage(username),
+                ),
+              ),
+            );
+          }),
+    );
+  }
+}
+
+class MessageDetailPage extends StatefulWidget {
+  final String username;
+
+  const MessageDetailPage({super.key, required this.username});
+
+  @override
+  State<MessageDetailPage> createState() => _MessageDetailPageState();
+}
+
+class _MessageDetailPageState extends State<MessageDetailPage> {
+  final User? _user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final TextEditingController _messageController = TextEditingController();
+  final List<Map<String, dynamic>> _messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHistoricalMessages();
+  }
+
+  Future<void> _fetchHistoricalMessages() async {
+    QuerySnapshot receivedMessages = await _db
+        .collection("messages")
+        .where('sender', isEqualTo: widget.username)
+        .where('recipient', isEqualTo: _user!.displayName)
+        .get();
+    QuerySnapshot sentMessages = await _db
+        .collection("messages")
+        .where('recipient', isEqualTo: widget.username)
+        .where('sender', isEqualTo: _user.displayName)
+        .get();
+    List<Map<String, dynamic>> fetchedMessages = [
+      ...receivedMessages.docs.map((doc) => doc.data() as Map<String, dynamic>),
+      ...sentMessages.docs.map((doc) => doc.data() as Map<String, dynamic>),
+    ];
+    fetchedMessages
+        .sort((m1, m2) => m1["timestamp"]!.compareTo(m2["timestamp"]!));
+    setState(() {
+      _messages.addAll(fetchedMessages);
+    });
+  }
+
+  Future<void> _sendMessage() async {
+    if (_messageController.text.isEmpty) return;
+
+    final DateTime timestamp = DateTime.timestamp();
+
+    final Map<String, dynamic> message = {
+      "sender": _user!.displayName,
+      "recipient": widget.username,
+      "message": _messageController.text,
+      "timestamp": timestamp
+    };
+
+    setState(() {
+      _messages.add(message);
+    });
+    await _db.collection("messages").add(message);
+
+    _messageController.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.username),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          Flexible(
+            child: ListView.separated(
+                padding: const EdgeInsets.all(12),
+                itemCount: _messages.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 6),
+                itemBuilder: (BuildContext context, int index) {
+                  final Map<String, dynamic> message = _messages[index];
+                  final bool isSelf = widget.username != message["sender"];
+                  return Row(
+                    mainAxisAlignment: isSelf
+                        ? MainAxisAlignment.end
+                        : MainAxisAlignment.start,
+                    children: [
+                      Card(
+                        color: isSelf ? Colors.blue : Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(12),
+                            topRight: const Radius.circular(12),
+                            bottomLeft: isSelf
+                                ? const Radius.circular(12)
+                                : Radius.zero,
+                            bottomRight: isSelf
+                                ? Radius.zero
+                                : const Radius.circular(12),
+                          ),
+                        ),
+                        elevation: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Text(
+                            message["message"]!,
+                            style: const TextStyle(color: Colors.black),
+                          ),
+                        ),
+                      )
+                    ],
+                  );
+                }),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                Flexible(
+                  child: TextField(
+                    showCursor: true,
+                    controller: _messageController,
+                    keyboardType: TextInputType.text,
+                    decoration: const InputDecoration(
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(30)),
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                    onPressed: _sendMessage, icon: const Icon(Icons.send)),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class AddPersonPage extends StatefulWidget {
+  final List<String> followedPeople;
+  final Function(String) managePerson;
+
+  const AddPersonPage(
+      {super.key, required this.followedPeople, required this.managePerson});
+
+  @override
+  State<AddPersonPage> createState() => _AddPersonPageState();
+}
+
+class _AddPersonPageState extends State<AddPersonPage> {
+  final List<String> _persons = [];
+  final TextEditingController _usernameController = TextEditingController();
+
+  Future<void> _fetchAllUsernames(String query) async {
+    final User? user = FirebaseAuth.instance.currentUser;
+    final FirebaseFirestore db = FirebaseFirestore.instance;
+
+    QuerySnapshot allUsers = await db
+        .collection("users")
+        .where("username", isGreaterThanOrEqualTo: query)
+        .get();
+
+    var fetchedUsernames = allUsers.docs
+        .where((doc) => doc["username"] != user?.displayName)
+        .map((doc) => doc["username"] as String);
+
+    setState(() {
+      _persons.clear();
+      _persons.addAll(fetchedUsernames);
+    });
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Add Person"),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              showCursor: true,
+              controller: _usernameController,
+              keyboardType: TextInputType.text,
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search_rounded),
+                suffixIcon: Icon(Icons.arrow_back_sharp),
+                label: Text("Enter a username"),
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                ),
+              ),
+              onSubmitted: (value) => _fetchAllUsernames(value),
+            ),
+          ),
+          Flexible(
+            child: ListView.builder(
+                itemCount: _persons.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final String username = _persons[index];
+                  return Person(
+                    username: username,
+                    isFollowed: widget.followedPeople.contains(username),
+                    managePerson: widget.managePerson,
+                  );
+                }),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class Person extends StatefulWidget {
+  const Person({
+    super.key,
+    required this.username,
+    required this.isFollowed,
+    required this.managePerson,
+  });
+
+  final String username;
+  final bool isFollowed;
+  final Function(String) managePerson;
+
+  @override
+  State<Person> createState() => _PersonState();
+}
+
+class _PersonState extends State<Person> {
+  bool _isFollowed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      _isFollowed = widget.isFollowed;
+    });
+  }
+
+  void _onPressFollow() {
+    widget.managePerson(widget.username);
+    setState(() {
+      _isFollowed = !_isFollowed;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.person),
+        title: Text(widget.username),
+        trailing: IconButton(
+          icon: Icon(_isFollowed ? Icons.check : Icons.add),
+          onPressed: _onPressFollow,
+        ),
+      ),
     );
   }
 }
