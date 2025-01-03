@@ -229,8 +229,8 @@ class _NewsContentPageState extends State<NewsContentPage> {
           IconButton(
             onPressed: _onPressBookmark,
             iconSize: 32,
-            icon:
-                Icon(_savedToBookmarks ? Icons.bookmark : Icons.bookmark_border),
+            icon: Icon(
+                _savedToBookmarks ? Icons.bookmark : Icons.bookmark_border),
             color: Colors.grey.shade400,
           )
         ],
@@ -248,7 +248,8 @@ class _NewsContentPageState extends State<NewsContentPage> {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Image(
-                        image: AssetImage(_placeHolderImage), fit: BoxFit.cover);
+                        image: AssetImage(_placeHolderImage),
+                        fit: BoxFit.cover);
                   },
                 ),
               ),

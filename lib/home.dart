@@ -707,7 +707,8 @@ class MessagesPage extends StatefulWidget {
 class _MessagesPageState extends State<MessagesPage> {
   final User? _user = FirebaseAuth.instance.currentUser;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final List<String> _followedPeople = [];
+  final List<String> _followedPeopleUsernames = [];
+  final List<String> _followedPeopleIds = [];
 
   @override
   void initState() {
@@ -720,29 +721,36 @@ class _MessagesPageState extends State<MessagesPage> {
         context,
         MaterialPageRoute(
             builder: (context) => AddPersonPage(
-                followedPeople: _followedPeople, managePerson: _managePerson)));
+                followedPeopleUsernames: _followedPeopleUsernames,
+                followedPeopleIds: _followedPeopleIds,
+                managePerson: _managePerson)));
   }
 
-  Future<void> _managePerson(String person) async {
-    if (_followedPeople.contains(person)) {
+  Future<void> _managePerson(String id, String username) async {
+    if (_followedPeopleUsernames.contains(username)) {
       QuerySnapshot querySnapshot = await _db
           .collection("users")
           .doc(_user!.uid)
           .collection("following")
-          .where("username", isEqualTo: person)
+          .where("username", isEqualTo: username)
           .get();
+
       await querySnapshot.docs.first.reference.delete();
+
       setState(() {
-        _followedPeople.remove(person);
+        _followedPeopleUsernames.remove(username);
+        _followedPeopleIds.remove(id);
       });
     } else {
       await _db
           .collection("users")
           .doc(_user!.uid)
           .collection("following")
-          .add({"username": person});
+          .add({"id": id, "username": username});
+
       setState(() {
-        _followedPeople.add(person);
+        _followedPeopleUsernames.add(username);
+        _followedPeopleIds.add(id);
       });
     }
   }
@@ -753,21 +761,28 @@ class _MessagesPageState extends State<MessagesPage> {
         .doc(_user!.uid)
         .collection("following")
         .get();
-    List<String> fetchedFollowedPeople = [];
+
+    List<String> fetchedFollowedUsernames = [];
+    List<String> fetchedFollowedIds = [];
+
     for (var document in querySnapshot.docs) {
       var data = document.data() as Map<String, dynamic>;
-      fetchedFollowedPeople.add(data["username"]);
+      fetchedFollowedUsernames.add(data["username"]);
+      fetchedFollowedIds.add(data["id"]);
     }
+
     setState(() {
-      _followedPeople.addAll(fetchedFollowedPeople);
+      _followedPeopleUsernames.addAll(fetchedFollowedUsernames);
+      _followedPeopleIds.addAll(fetchedFollowedIds);
     });
   }
 
-  void _onPressMessage(String username) {
+  void _onPressMessage(String id, String username) {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => MessageDetailPage(username: username)));
+            builder: (context) =>
+                MessageDetailPage(id: id, username: username)));
   }
 
   @override
@@ -784,16 +799,17 @@ class _MessagesPageState extends State<MessagesPage> {
         ],
       ),
       body: ListView.builder(
-          itemCount: _followedPeople.length,
+          itemCount: _followedPeopleUsernames.length,
           itemBuilder: (BuildContext context, int index) {
-            final String username = _followedPeople[index];
+            final String username = _followedPeopleUsernames[index];
+            final String id = _followedPeopleIds[index];
             return Card(
               child: ListTile(
                 title: Text(username),
                 leading: const Icon(Icons.person),
                 trailing: IconButton(
                   icon: const Icon(Icons.message_sharp),
-                  onPressed: () => _onPressMessage(username),
+                  onPressed: () => _onPressMessage(id, username),
                 ),
               ),
             );
@@ -803,9 +819,11 @@ class _MessagesPageState extends State<MessagesPage> {
 }
 
 class MessageDetailPage extends StatefulWidget {
+  final String id;
   final String username;
 
-  const MessageDetailPage({super.key, required this.username});
+  const MessageDetailPage(
+      {super.key, required this.id, required this.username});
 
   @override
   State<MessageDetailPage> createState() => _MessageDetailPageState();
@@ -826,13 +844,13 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
   Future<void> _fetchHistoricalMessages() async {
     QuerySnapshot receivedMessages = await _db
         .collection("messages")
-        .where('sender', isEqualTo: widget.username)
-        .where('recipient', isEqualTo: _user!.displayName)
+        .where('sender', isEqualTo: widget.id)
+        .where('recipient', isEqualTo: _user!.uid)
         .get();
     QuerySnapshot sentMessages = await _db
         .collection("messages")
-        .where('recipient', isEqualTo: widget.username)
-        .where('sender', isEqualTo: _user.displayName)
+        .where('recipient', isEqualTo: widget.id)
+        .where('sender', isEqualTo: _user.uid)
         .get();
     List<Map<String, dynamic>> fetchedMessages = [
       ...receivedMessages.docs.map((doc) => doc.data() as Map<String, dynamic>),
@@ -851,8 +869,8 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
     final DateTime timestamp = DateTime.timestamp();
 
     final Map<String, dynamic> message = {
-      "sender": _user!.displayName,
-      "recipient": widget.username,
+      "sender": _user!.uid,
+      "recipient": widget.id,
       "message": _messageController.text,
       "timestamp": timestamp
     };
@@ -881,7 +899,7 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
                 separatorBuilder: (_, __) => const SizedBox(height: 6),
                 itemBuilder: (BuildContext context, int index) {
                   final Map<String, dynamic> message = _messages[index];
-                  final bool isSelf = widget.username != message["sender"];
+                  final bool isSelf = widget.id != message["sender"];
                   return Row(
                     mainAxisAlignment: isSelf
                         ? MainAxisAlignment.end
@@ -944,21 +962,26 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
 }
 
 class AddPersonPage extends StatefulWidget {
-  final List<String> followedPeople;
-  final Function(String) managePerson;
+  final List<String> followedPeopleUsernames;
+  final List<String> followedPeopleIds;
+  final Function(String, String) managePerson;
 
   const AddPersonPage(
-      {super.key, required this.followedPeople, required this.managePerson});
+      {super.key,
+      required this.followedPeopleUsernames,
+      required this.followedPeopleIds,
+      required this.managePerson});
 
   @override
   State<AddPersonPage> createState() => _AddPersonPageState();
 }
 
 class _AddPersonPageState extends State<AddPersonPage> {
-  final List<String> _persons = [];
+  final List<String> _allPeopleUsernames = [];
+  final List<String> _allPeopleIds = [];
   final TextEditingController _usernameController = TextEditingController();
 
-  Future<void> _fetchAllUsernames(String query) async {
+  Future<void> _fetchAllUsers(String query) async {
     final User? user = FirebaseAuth.instance.currentUser;
     final FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -970,10 +993,14 @@ class _AddPersonPageState extends State<AddPersonPage> {
     var fetchedUsernames = allUsers.docs
         .where((doc) => doc["username"] != user?.displayName)
         .map((doc) => doc["username"] as String);
+    var fetchedIds = allUsers.docs
+        .where((doc) => doc.reference.id != user?.uid)
+        .map((doc) => doc.reference.id);
 
     setState(() {
-      _persons.clear();
-      _persons.addAll(fetchedUsernames);
+      _allPeopleUsernames.clear();
+      _allPeopleUsernames.addAll(fetchedUsernames);
+      _allPeopleIds.addAll(fetchedIds);
     });
   }
 
@@ -1009,17 +1036,20 @@ class _AddPersonPageState extends State<AddPersonPage> {
                   borderRadius: BorderRadius.all(Radius.circular(30)),
                 ),
               ),
-              onSubmitted: (value) => _fetchAllUsernames(value),
+              onSubmitted: (value) => _fetchAllUsers(value),
             ),
           ),
           Flexible(
             child: ListView.builder(
-                itemCount: _persons.length,
+                itemCount: _allPeopleUsernames.length,
                 itemBuilder: (BuildContext context, int index) {
-                  final String username = _persons[index];
+                  final String username = _allPeopleUsernames[index];
+                  final String id = _allPeopleIds[index];
                   return Person(
+                    id: id,
                     username: username,
-                    isFollowed: widget.followedPeople.contains(username),
+                    isFollowed:
+                        widget.followedPeopleUsernames.contains(username),
                     managePerson: widget.managePerson,
                   );
                 }),
@@ -1033,14 +1063,16 @@ class _AddPersonPageState extends State<AddPersonPage> {
 class Person extends StatefulWidget {
   const Person({
     super.key,
+    required this.id,
     required this.username,
     required this.isFollowed,
     required this.managePerson,
   });
 
+  final String id;
   final String username;
   final bool isFollowed;
-  final Function(String) managePerson;
+  final Function(String, String) managePerson;
 
   @override
   State<Person> createState() => _PersonState();
@@ -1058,7 +1090,7 @@ class _PersonState extends State<Person> {
   }
 
   void _onPressFollow() {
-    widget.managePerson(widget.username);
+    widget.managePerson(widget.id, widget.username);
     setState(() {
       _isFollowed = !_isFollowed;
     });
