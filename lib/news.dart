@@ -217,6 +217,13 @@ class _NewsContentPageState extends State<NewsContentPage> {
     });
   }
 
+  void _navigateToFollowingPage() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => FollowingPage(news: widget.news)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -296,18 +303,294 @@ class _NewsContentPageState extends State<NewsContentPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Builder(builder: (context) {
-                    return IconButton(
-                      iconSize: 32,
-                      icon: const Icon(Icons.share),
-                      color: Colors.blue,
-                      onPressed: () => _shareLink(),
-                    );
-                  }),
+                  IconButton(
+                    iconSize: 32,
+                    icon: const Icon(Icons.send_outlined),
+                    onPressed: _navigateToFollowingPage,
+                    color: Colors.blueGrey,
+                  ),
+                  IconButton(
+                    iconSize: 32,
+                    icon: const Icon(Icons.share),
+                    color: Colors.blue,
+                    onPressed: () => _shareLink(),
+                  ),
                 ],
               )
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class FollowingPage extends StatefulWidget {
+  final News news;
+
+  const FollowingPage({super.key, required this.news});
+
+  @override
+  State<FollowingPage> createState() => _FollowingPageState();
+}
+
+class _FollowingPageState extends State<FollowingPage> {
+  final User? _user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final List<String> _followedIds = [];
+  final List<String> _followedUsernames = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _getFollowedUsers();
+  }
+
+  Future<void> _getFollowedUsers() async {
+    DocumentSnapshot documentSnapshot =
+        await _db.collection("users").doc(_user!.uid).get();
+    List<String> fetchedFollowedIds = [];
+    List<String> fetchedFollowedUsernames = [];
+    for (var id in documentSnapshot.get("following") as List<dynamic>) {
+      fetchedFollowedIds.add(id);
+      fetchedFollowedUsernames.add(await _getUsername(id));
+    }
+    setState(() {
+      _followedIds.addAll(fetchedFollowedIds);
+      _followedUsernames.addAll(fetchedFollowedUsernames);
+    });
+  }
+
+  void _onPressMessage(String id) {
+    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => MessageDetailPage(
+                  id: id,
+                  news: widget.news,
+                )));
+  }
+
+  Future<String> _getUsername(String id) async {
+    DocumentSnapshot documentSnapshot =
+        await _db.collection("users").doc(id).get();
+    return documentSnapshot.get("username");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "Messages",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
+      body: ListView.builder(
+          itemCount: _followedIds.length,
+          itemBuilder: (BuildContext context, int index) {
+            final String id = _followedIds[index];
+            final String username = _followedUsernames[index];
+            return Card(
+              child: ListTile(
+                title: Text(username),
+                leading: const Icon(Icons.person),
+                trailing: IconButton(
+                  icon: const Icon(Icons.message_sharp),
+                  onPressed: () => _onPressMessage(id),
+                ),
+              ),
+            );
+          }),
+    );
+  }
+}
+
+class MessageDetailPage extends StatefulWidget {
+  final String id;
+  final News news;
+
+  const MessageDetailPage({super.key, required this.id, required this.news});
+
+  @override
+  State<MessageDetailPage> createState() => _MessageDetailPageState();
+}
+
+class _MessageDetailPageState extends State<MessageDetailPage> {
+  final User? _user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final TextEditingController _messageController = TextEditingController();
+  final List<Map<String, dynamic>> _messages = [];
+  String _username = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _getUsername();
+    _fetchHistoricalMessages();
+    _sendNews();
+  }
+
+  Future<void> _getUsername() async {
+    DocumentSnapshot documentSnapshot =
+        await _db.collection("users").doc(widget.id).get();
+    setState(() {
+      _username = documentSnapshot.get("username");
+    });
+  }
+
+  Future<void> _fetchHistoricalMessages() async {
+    QuerySnapshot receivedMessages = await _db
+        .collection("messages")
+        .where('sender', isEqualTo: widget.id)
+        .where('recipient', isEqualTo: _user!.uid)
+        .get();
+    QuerySnapshot sentMessages = await _db
+        .collection("messages")
+        .where('recipient', isEqualTo: widget.id)
+        .where('sender', isEqualTo: _user.uid)
+        .get();
+    List<Map<String, dynamic>> fetchedMessages = [
+      ...receivedMessages.docs.map((doc) => doc.data() as Map<String, dynamic>),
+      ...sentMessages.docs.map((doc) => doc.data() as Map<String, dynamic>),
+    ];
+    fetchedMessages
+        .sort((m1, m2) => m1["timestamp"]!.compareTo(m2["timestamp"]!));
+    setState(() {
+      _messages.clear();
+      _messages.addAll(fetchedMessages);
+    });
+  }
+
+  Future<void> _sendMessage() async {
+    if (_messageController.text.isEmpty) return;
+
+    final DateTime timestamp = DateTime.timestamp();
+
+    final Map<String, dynamic> message = {
+      "sender": _user!.uid,
+      "recipient": widget.id,
+      "message": _messageController.text,
+      "timestamp": timestamp
+    };
+
+    setState(() {
+      _messages.add(message);
+    });
+    await _db.collection("messages").add(message);
+
+    _messageController.clear();
+  }
+
+  Future<void> _sendNews() async {
+    final DateTime timestamp = DateTime.timestamp();
+
+    final Map<String, dynamic> message = {
+      "sender": _user!.uid,
+      "message": "",
+      "recipient": widget.id,
+      "timestamp": timestamp,
+      ...widget.news.toJson(),
+    };
+
+    setState(() {
+      _messages.add(message);
+    });
+    await _db.collection("messages").add(message);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          _username,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
+      body: RefreshIndicator(
+        onRefresh: _fetchHistoricalMessages,
+        child: Column(
+          children: [
+            Flexible(
+              child: ListView.separated(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: _messages.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 6),
+                  itemBuilder: (BuildContext context, int index) {
+                    final Map<String, dynamic> message = _messages[index];
+                    final bool isSelf = widget.id != message["sender"];
+                    if (message["message"].isEmpty) {
+                      final News news = News.fromJson(message);
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      NewsContentPage(news: news)));
+                        },
+                        child: NewsCard(news: news),
+                      );
+                    }
+                    return Row(
+                      mainAxisAlignment: isSelf
+                          ? MainAxisAlignment.end
+                          : MainAxisAlignment.start,
+                      children: [
+                        Card(
+                          color: isSelf ? Colors.blue : Colors.grey[300],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(12),
+                              topRight: const Radius.circular(12),
+                              bottomLeft: isSelf
+                                  ? const Radius.circular(12)
+                                  : Radius.zero,
+                              bottomRight: isSelf
+                                  ? Radius.zero
+                                  : const Radius.circular(12),
+                            ),
+                          ),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(
+                              message["message"]!,
+                              style: const TextStyle(color: Colors.black),
+                            ),
+                          ),
+                        )
+                      ],
+                    );
+                  }),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: TextField(
+                      showCursor: true,
+                      controller: _messageController,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                      onPressed: _sendMessage, icon: const Icon(Icons.send)),
+                ],
+              ),
+            )
+          ],
         ),
       ),
     );

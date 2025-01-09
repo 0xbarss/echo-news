@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
 
   void _onPressMessage(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return const MessagesPage();
+      return const FollowingPage();
     }));
   }
 
@@ -98,7 +98,7 @@ class _HomePageState extends State<HomePage> {
               style: Theme.of(context)
                   .textTheme
                   .headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+                  ?.copyWith(fontWeight: FontWeight.bold, color: Colors.black),
             ),
           ],
         ),
@@ -690,14 +690,14 @@ class _HelpCenterItemState extends State<HelpCenterItem> {
   }
 }
 
-class MessagesPage extends StatefulWidget {
-  const MessagesPage({super.key});
+class FollowingPage extends StatefulWidget {
+  const FollowingPage({super.key});
 
   @override
-  State<MessagesPage> createState() => _MessagesPageState();
+  State<FollowingPage> createState() => _FollowingPageState();
 }
 
-class _MessagesPageState extends State<MessagesPage> {
+class _FollowingPageState extends State<FollowingPage> {
   final User? _user = FirebaseAuth.instance.currentUser;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final List<String> _followedIds = [];
@@ -840,6 +840,7 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
     ];
     fetchedMessages.sort((m1, m2) => m1["timestamp"]!.compareTo(m2["timestamp"]!));
     setState(() {
+      _messages.clear();
       _messages.addAll(fetchedMessages);
     });
   }
@@ -871,64 +872,80 @@ class _MessageDetailPageState extends State<MessageDetailPage> {
         title: Text(_username, style: const TextStyle(fontWeight: FontWeight.bold),),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          Flexible(
-            child: ListView.separated(
-                padding: const EdgeInsets.all(12),
-                itemCount: _messages.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 6),
-                itemBuilder: (BuildContext context, int index) {
-                  final Map<String, dynamic> message = _messages[index];
-                  final bool isSelf = widget.id != message["sender"];
-                  return Row(
-                    mainAxisAlignment: isSelf ? MainAxisAlignment.end: MainAxisAlignment.start,
-                    children: [
-                      Card(
-                        color: isSelf ? Colors.blue: Colors.grey[300],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(12),
-                            topRight: const Radius.circular(12),
-                            bottomLeft:
-                                isSelf ? const Radius.circular(12) : Radius.zero,
-                            bottomRight:
-                                isSelf ? Radius.zero : const Radius.circular(12),
+      body: RefreshIndicator(
+        onRefresh: _fetchHistoricalMessages,
+        child: Column(
+          children: [
+            Flexible(
+              child: ListView.separated(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: _messages.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 6),
+                  itemBuilder: (BuildContext context, int index) {
+                    final Map<String, dynamic> message = _messages[index];
+                    final bool isSelf = widget.id != message["sender"];
+                    if (message["message"].isEmpty) {
+                      final News news = News.fromJson(message);
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      NewsContentPage(news: news)));
+                        },
+                        child: NewsCard(news: news),
+                      );
+                    }
+                    return Row(
+                      mainAxisAlignment: isSelf ? MainAxisAlignment.end: MainAxisAlignment.start,
+                      children: [
+                        Card(
+                          color: isSelf ? Colors.blue: Colors.grey[300],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(12),
+                              topRight: const Radius.circular(12),
+                              bottomLeft:
+                                  isSelf ? const Radius.circular(12) : Radius.zero,
+                              bottomRight:
+                                  isSelf ? Radius.zero : const Radius.circular(12),
+                            ),
                           ),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(message["message"]!, style: const TextStyle(color: Colors.black),),
+                          ),
+                        )
+                      ],
+                    );
+                  }),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: TextField(
+                      showCursor: true,
+                      controller: _messageController,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                        contentPadding:
+                        EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
                         ),
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Text(message["message"]!, style: const TextStyle(color: Colors.black),),
-                        ),
-                      )
-                    ],
-                  );
-                }),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              children: [
-                Flexible(
-                  child: TextField(
-                    showCursor: true,
-                    controller: _messageController,
-                    keyboardType: TextInputType.text,
-                    decoration: const InputDecoration(
-                      contentPadding:
-                      EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(30)),
                       ),
                     ),
                   ),
-                ),
-                IconButton(onPressed: _sendMessage, icon: const Icon(Icons.send)),
-              ],
-            ),
-          )
-        ],
+                  IconButton(onPressed: _sendMessage, icon: const Icon(Icons.send)),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
