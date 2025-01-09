@@ -111,8 +111,7 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 60),
             Text("Welcome to EchoNews",
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF2B394D))),
+                    fontWeight: FontWeight.bold,)),
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Image.asset(
