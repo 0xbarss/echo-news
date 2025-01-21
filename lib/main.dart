@@ -11,7 +11,7 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(NewsAPIProvider(NewsAPI(apiKey: "a194493e5fd94fff814c7eebf34e2f65"),
+  runApp(NewsAPIProvider(NewsAPI(apiKey: "YOUR-API-KEY-HERE"),
       child: const MyApp()));
 }
 
